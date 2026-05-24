@@ -103,9 +103,9 @@ export default function KanbanBoard({ job, candidates, onBack, onUpdateCandidate
         // Step 4: Salva il candidato nel database con i metadati ed il testo estratto
         const newCandidate = {
           job_id: job.id,
-          name: parsedInfo.nome || file.name.replace('.pdf', ''),
-          email: parsedInfo.email,
-          phone: parsedInfo.phone,
+          name: parsedInfo.nome || parsedInfo.name || file.name.replace('.pdf', ''),
+          email: parsedInfo.email || '',
+          phone: parsedInfo.telefono || parsedInfo.phone || '',
           stage: 'Nuovi CV',
           cv_text: extractedText,
           competenze: parsedInfo.competenze || [],

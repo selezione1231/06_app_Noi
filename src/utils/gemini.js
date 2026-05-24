@@ -146,51 +146,89 @@ Formato JSON richiesto:
    ========================================== */
 
 function mockExtractCandidateInfo(cvText) {
-  // Tenta di estrarre un'email e un telefono reali dal testo usando espressioni regolari semplici
+  // 1. Estrazione Email robusta
   const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi
-  const phoneRegex = /(\+?\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{3,6})/g
+  const extractedEmail = cvText.match(emailRegex)?.[0] || "candidato@azienda.it"
   
-  const extractedEmail = cvText.match(emailRegex)?.[0] || "mario.rossi@email.it"
-  const extractedPhone = cvText.match(phoneRegex)?.[0] || "+39 347 123 4567"
+  // 2. Estrazione Telefono robusta (gestisce prefissi, spazi e parentesi come (+39) 329...)
+  const phoneRegex = /(?:telefono|tel|cell|cellulare|phone)?\s*[:.-]?\s*(\+?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,7})/i
+  const phoneMatch = cvText.match(phoneRegex)
+  const extractedPhone = phoneMatch ? phoneMatch[1].trim() : ""
   
-  // Tenta di indovinare il nome
-  let extractedName = "Mario Rossi"
+  // 3. Estrazione Nome Robusta (cerca le prime parole maiuscole consecutive a inizio riga, es. "Benito Manuel Attanasio")
+  let extractedName = "Candidato"
   const textLines = cvText.split("\n").map(l => l.trim()).filter(l => l.length > 0)
   if (textLines.length > 0) {
-    // Prende la prima linea significativa (spesso è il nome nei CV)
-    const candidateName = textLines[0]
-    if (candidateName.length < 40 && !candidateName.toLowerCase().includes("curriculum") && !candidateName.toLowerCase().includes("cv")) {
-      extractedName = candidateName
+    const firstLine = textLines[0]
+    // Cerca da 2 a 4 parole che iniziano con una lettera maiuscola all'inizio del testo
+    const nameMatch = firstLine.match(/^([A-ZÀ-Ù][a-zà-ù']+\s*){2,4}/)
+    if (nameMatch && nameMatch[0].trim().length > 3) {
+      extractedName = nameMatch[0].trim()
+    } else {
+      // Fallback: prende le prime 2-3 parole se non superano i 35 caratteri
+      const words = firstLine.split(/\s+/).slice(0, 3).join(" ")
+      if (words.length > 3 && words.length < 35 && !words.toLowerCase().includes("curriculum") && !words.toLowerCase().includes("cv")) {
+        extractedName = words
+      } else {
+        // Cerca nella seconda riga se la prima era un'intestazione tipo "Curriculum Vitae"
+        const secondLine = textLines[1] || ""
+        const secondNameMatch = secondLine.match(/^([A-ZÀ-Ù][a-zà-ù']+\s*){2,4}/)
+        if (secondNameMatch && secondNameMatch[0].trim().length > 3) {
+          extractedName = secondNameMatch[0].trim()
+        }
+      }
     }
   }
 
-  // Profilo mockup ad alte prestazioni
+  // 4. Estrazione Dinamica Competenze basata sulle parole chiave reali presenti nel testo del CV
+  const knownSkills = [
+    "React", "TypeScript", "Node.js", "Zustand", "Redux", "JavaScript", "HTML5", "CSS3", "SQL", "Git", 
+    "Docker", "AWS", "Python", "Java", "Agile", "WordPress", "SEO", "Office", "CRM", "Customer Care", 
+    "Excel", "Team System", "Gestionale", "Amministrazione", "Vendita", "B2B", "Customer Service"
+  ]
+  const matchedSkills = knownSkills.filter(skill => 
+    cvText.toLowerCase().includes(skill.toLowerCase())
+  )
+  const finalSkills = matchedSkills.length > 0 ? matchedSkills.slice(0, 10) : ["Teamwork", "Problem Solving", "Office"]
+
+  // Rileva ruolo principale in base al testo
+  let guessedRole = "Impiegato / Tecnico"
+  if (cvText.toLowerCase().includes("developer") || cvText.toLowerCase().includes("programmatore")) {
+    guessedRole = "Software Developer"
+  } else if (cvText.toLowerCase().includes("sales") || cvText.toLowerCase().includes("commerciale")) {
+    guessedRole = "Sales Specialist"
+  } else if (cvText.toLowerCase().includes("customer") || cvText.toLowerCase().includes("assistenza")) {
+    guessedRole = "Customer Support Specialist"
+  } else if (cvText.toLowerCase().includes("ufficio") || cvText.toLowerCase().includes("amministrativo")) {
+    guessedRole = "Addetto Amministrativo / Ufficio"
+  }
+
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         nome: extractedName,
         email: extractedEmail,
         telefono: extractedPhone,
-        ruolo_attuale: "Senior Software Engineer / Developer",
-        competenze: ["HTML5", "CSS3", "JavaScript (ES6)", "React", "Node.js", "SQL", "Git", "Problem Solving", "Teamwork"],
+        ruolo_attuale: guessedRole,
+        competenze: finalSkills,
         esperienze: [
           {
-            ruolo: "Full Stack Developer",
-            azienda: "Tech Solution S.r.l.",
+            ruolo: guessedRole,
+            azienda: cvText.match(/(?:presso|azienda|società|spa|srl)\s+([A-Za-z0-9\s]+(?:S\.?[pP]\.?[aA]\.?|S\.?[rR]\.?[lL]\.?))/i)?.[1] || "Azienda Selezionata",
             periodo: "2023 - Presente",
-            descrizione: "Sviluppo di applicazioni web enterprise in React e Node.js. Ottimizzazione delle query del database e coordinamento di 2 developer junior."
+            descrizione: "Sviluppo di attività operative in linea con il ruolo. Gestione delle procedure interne e coordinamento con i colleghi."
           },
           {
-            ruolo: "Web Developer",
-            azienda: "Digital Factory S.p.A.",
+            ruolo: "Collaboratore Junior",
+            azienda: "Studio Professionale",
             periodo: "2020 - 2023",
-            descrizione: "Creazione e manutenzione di siti e-commerce ad alto traffico. Integrazione di API di pagamento esterne."
+            descrizione: "Supporto operativo alle attività del team di reparto, gestione archivi e inserimento dati."
           }
         ],
         istruzione: [
           {
-            titolo: "Laurea Magistrale in Informatica",
-            istituto: "Università degli Studi di Milano",
+            titolo: cvText.toLowerCase().includes("laurea") ? "Laurea" : "Diploma di Scuola Superiore",
+            istituto: "Istituto Statale",
             anno: "2020"
           }
         ]
