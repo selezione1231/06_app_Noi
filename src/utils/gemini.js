@@ -28,6 +28,52 @@ const parseGeminiJson = (text) => {
 /**
  * Estrae le informazioni del candidato dal testo del CV
  */
+// Lista dei modelli in ordine di preferenza/compatibilità
+const PREFERRED_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro"
+];
+
+/**
+ * Tenta di generare contenuti ciclando sui modelli supportati in caso di errore 404 (modello non supportato o non trovato)
+ */
+const generateContentWithFallback = async (prompt, responseMimeType = "application/json") => {
+  const ai = new GoogleGenerativeAI(apiKey);
+  let lastError = null;
+
+  for (const modelName of PREFERRED_MODELS) {
+    try {
+      console.log(`Tentativo di generazione con il modello Gemini: ${modelName}`);
+      const model = ai.getGenerativeModel({ 
+        model: modelName,
+        generationConfig: responseMimeType ? { responseMimeType } : undefined
+      });
+      
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      if (responseText) {
+        console.log(`Successo con il modello: ${modelName}`);
+        return responseText;
+      }
+    } catch (err) {
+      console.warn(`Modello ${modelName} fallito o non supportato:`, err.message);
+      lastError = err;
+      // Se l'errore è 404 o correlato a "not found for API version", continuiamo col prossimo modello
+      if (err.message.includes("not found") || err.message.includes("404") || err.message.includes("supported")) {
+        continue;
+      }
+      // Per altri tipi di errori gravi (es. chiave API errata), interrompiamo subito
+      throw err;
+    }
+  }
+
+  throw lastError || new Error("Nessun modello Gemini supportato o disponibile per questa chiave API.");
+};
+
+/**
+ * Estrae le informazioni del candidato dal testo del CV
+ */
 export const extractCandidateInfo = async (cvText) => {
   if (!isGeminiConfigured) {
     console.log("Gemini API non configurata. Esecuzione in modalità Demo/Mockup.");
@@ -35,12 +81,6 @@ export const extractCandidateInfo = async (cvText) => {
   }
 
   try {
-    const ai = new GoogleGenerativeAI(apiKey)
-    const model = ai.getGenerativeModel({ 
-      model: "gemini-1.5-flash", // Modello consigliato per velocità e analisi strutturata
-      generationConfig: { responseMimeType: "application/json" }
-    })
-
     const prompt = `
 Analizza il seguente curriculum vitae (estratto da un file PDF) ed estrai le informazioni principali strutturandole ESCLUSIVAMENTE nel formato JSON descritto sotto. Non aggiungere nessun commento extra o testo prima/dopo il JSON.
 
@@ -74,13 +114,12 @@ ${cvText}
 ---
 `
 
-    const result = await model.generateContent(prompt)
-    const textResponse = result.response.text()
-    return parseGeminiJson(textResponse)
+    const textResponse = await generateContentWithFallback(prompt, "application/json");
+    return parseGeminiJson(textResponse);
   } catch (error) {
-    console.error("Errore durante la chiamata Gemini API (estrazione):", error)
-    // Se c'è un errore, fall-back sul mock per non bloccare l'interfaccia dell'utente
-    return mockExtractCandidateInfo(cvText)
+    console.error("Errore durante la chiamata Gemini API (estrazione):", error);
+    // Se c'è un errore, fall-back sul mock avanzato per non bloccare l'interfaccia dell'utente
+    return mockExtractCandidateInfo(cvText);
   }
 }
 
@@ -94,12 +133,6 @@ export const matchCandidateWithJob = async (candidateInfo, jobDescription) => {
   }
 
   try {
-    const ai = new GoogleGenerativeAI(apiKey)
-    const model = ai.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
-    })
-
     const prompt = `
 Sei un HR Manager esperto. Analizza la compatibilità (matching) tra questo Candidato e la Job Description della posizione lavorativa.
 Genera una valutazione dettagliata strutturandola ESCLUSIVAMENTE nel formato JSON descritto sotto. Non aggiungere testi aggiuntivi prima o dopo.
@@ -131,12 +164,11 @@ Formato JSON richiesto:
 }
 `
 
-    const result = await model.generateContent(prompt)
-    const textResponse = result.response.text()
-    return parseGeminiJson(textResponse)
+    const textResponse = await generateContentWithFallback(prompt, "application/json");
+    return parseGeminiJson(textResponse);
   } catch (error) {
-    console.error("Errore durante la chiamata Gemini API (matching):", error)
-    return mockMatchCandidateWithJob(candidateInfo, jobDescription)
+    console.error("Errore durante la chiamata Gemini API (matching):", error);
+    return mockMatchCandidateWithJob(candidateInfo, jobDescription);
   }
 }
 
