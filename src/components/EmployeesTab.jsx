@@ -1,12 +1,25 @@
 import React, { useState } from 'react'
 
-export default function EmployeesTab({ employees, candidates, onAddEmployee, onUpdateEmployee, onDeleteEmployee }) {
+export default function EmployeesTab({ 
+  employees, 
+  candidates, 
+  onAddEmployee, 
+  onUpdateEmployee, 
+  onDeleteEmployee,
+  checklists = [],
+  performances = [],
+  onUpdateChecklistTask,
+  onAddChecklistTask,
+  onSavePerformanceReview,
+  onUpdateOkrProgress,
+  onAddOkrObjective
+}) {
   const [selectedEmpId, setSelectedEmpId] = useState(employees[0]?.id || null)
-  const [activeSubTab, setActiveSubTab] = useState('contract') // 'contract', 'assets', 'deadlines'
+  const [activeSubTab, setActiveSubTab] = useState('contract') // 'contract', 'assets', 'deadlines', 'checklist', 'performance'
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEmp, setEditingEmp] = useState(null)
   
-  // Campi del form
+  // Campi del form dipendente
   const [formName, setFormName] = useState('')
   const [formEmail, setFormEmail] = useState('')
   const [formPhone, setFormPhone] = useState('')
@@ -24,6 +37,27 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
   const [newAssetType, setNewAssetType] = useState('Notebook')
   const [newAssetModel, setNewAssetModel] = useState('')
   const [newAssetSerial, setNewAssetSerial] = useState('')
+
+  // Gestione Checklist
+  const [checklistType, setChecklistType] = useState('Onboarding') // 'Onboarding' | 'Offboarding'
+  const [newChecklistTask, setNewChecklistTask] = useState('')
+  const [newChecklistAssigned, setNewChecklistAssigned] = useState('HR')
+
+  // Gestione Performance Form
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false)
+  const [reviewPeriod, setReviewPeriod] = useState('Q1 2026')
+  const [selfTech, setSelfTech] = useState(4)
+  const [selfTeamwork, setSelfTeamwork] = useState(4)
+  const [selfProactivity, setSelfProactivity] = useState(4)
+  const [selfComm, setSelfComm] = useState(4)
+  const [managerTech, setManagerTech] = useState(4)
+  const [managerTeamwork, setManagerTeamwork] = useState(4)
+  const [managerProactivity, setManagerProactivity] = useState(4)
+  const [managerComm, setManagerComm] = useState(4)
+  const [reviewFeedback, setReviewFeedback] = useState('')
+
+  // Gestione OKR Form
+  const [newOkrTitle, setNewOkrTitle] = useState('')
 
   const selectedEmp = employees.find(e => e.id === selectedEmpId) || employees[0]
 
@@ -120,6 +154,77 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
     }
   }
 
+  // Gestione compiti checklist
+  const handleToggleChecklist = async (taskId, currentStatus) => {
+    if (onUpdateChecklistTask) {
+      await onUpdateChecklistTask(taskId, !currentStatus)
+    }
+  }
+
+  const handleAddCustomChecklistTask = async (e) => {
+    e.preventDefault()
+    if (!newChecklistTask.trim() || !selectedEmp) return
+    if (onAddChecklistTask) {
+      await onAddChecklistTask({
+        employee_id: selectedEmp.id,
+        employee_name: selectedEmp.name,
+        type: checklistType,
+        task_name: newChecklistTask,
+        assigned_to: newChecklistAssigned,
+        is_completed: false
+      })
+      setNewChecklistTask('')
+    }
+  }
+
+  // Gestione Valutazioni Performance
+  const handleOpenReviewForm = () => {
+    setReviewPeriod('Q1 2026')
+    setSelfTech(4)
+    setSelfTeamwork(4)
+    setSelfProactivity(4)
+    setSelfComm(4)
+    setManagerTech(4)
+    setManagerTeamwork(4)
+    setManagerProactivity(4)
+    setManagerComm(4)
+    setReviewFeedback('')
+    setIsReviewFormOpen(true)
+  }
+
+  const handleSaveReview = async (e) => {
+    e.preventDefault()
+    if (!selectedEmp) return
+    if (onSavePerformanceReview) {
+      const reviewData = {
+        employee_id: selectedEmp.id,
+        employee_name: selectedEmp.name,
+        review_period: reviewPeriod,
+        self_rating: { tech: selfTech, teamwork: selfTeamwork, proactivity: selfProactivity, communication: selfComm },
+        manager_rating: { tech: managerTech, teamwork: managerTeamwork, proactivity: managerProactivity, communication: managerComm },
+        overall_feedback: reviewFeedback
+      }
+      await onSavePerformanceReview(reviewData)
+      setIsReviewFormOpen(false)
+    }
+  }
+
+  // Gestione OKR
+  const handleAddOkr = async (e) => {
+    e.preventDefault()
+    if (!newOkrTitle.trim() || !selectedEmp) return
+    if (onAddOkrObjective) {
+      await onAddOkrObjective(selectedEmp.id, newOkrTitle)
+      setNewOkrTitle('')
+    }
+  }
+
+  const handleOkrProgressChange = async (idx, val) => {
+    if (onUpdateOkrProgress && selectedEmp) {
+      await onUpdateOkrProgress(selectedEmp.id, idx, parseInt(val))
+    }
+  }
+
   // Helper per controllare scadenze
   const getDeadlineStatus = (dateStr) => {
     if (!dateStr) return { label: 'Non Impostata', class: 'badge-secondary', icon: '❓' }
@@ -137,13 +242,58 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
     }
   }
 
+  // Dati filtrati per l'impiegato selezionato
+  const empChecklist = checklists.filter(item => item.employee_id === selectedEmp?.id && item.type === checklistType)
+  const empCompletedTasks = empChecklist.filter(t => t.is_completed).length
+  const empTotalTasks = empChecklist.length
+  const checklistPercent = empTotalTasks > 0 ? Math.round((empCompletedTasks / empTotalTasks) * 100) : 0
+
+  const empReviews = performances.filter(p => p.employee_id === selectedEmp?.id)
+  const activeReview = empReviews[0] // Prendi la più recente
+
+  // Generatore coordinate Radar Chart SVG nativo a 4 Assi (Tech, Teamwork, Proactivity, Communication)
+  // Centro: x=100, y=100. Raggio massimo per rating 5 = 70.
+  const getRadarCoordinates = (rating) => {
+    if (!rating) return { tech: {x:100, y:100}, teamwork: {x:100, y:100}, proactivity: {x:100, y:100}, comm: {x:100, y:100} }
+    
+    const maxR = 70
+    const cx = 100
+    const cy = 100
+
+    return {
+      // Tech: Asse Verticale Superiore (0 gradi)
+      tech: {
+        x: cx,
+        y: cy - (rating.tech / 5) * maxR
+      },
+      // Teamwork: Asse Orizzontale Destro (90 gradi)
+      teamwork: {
+        x: cx + (rating.teamwork / 5) * maxR,
+        y: cy
+      },
+      // Proactivity: Asse Verticale Inferiore (180 gradi)
+      proactivity: {
+        x: cx,
+        y: cy + (rating.proactivity / 5) * maxR
+      },
+      // Communication: Asse Orizzontale Sinistro (270 gradi)
+      comm: {
+        x: cx - (rating.communication / 5) * maxR,
+        y: cy
+      }
+    }
+  }
+
+  const selfCoords = activeReview ? getRadarCoordinates(activeReview.self_rating) : null
+  const managerCoords = activeReview ? getRadarCoordinates(activeReview.manager_rating) : null
+
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', minHeight: 'calc(100vh - 120px)' }}>
       {/* Intestazione del Tab */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
         <div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem' }}>👥 Anagrafica & Fascicolo Dipendenti</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Gestione contratti, beni aziendali consegnati e scadenze legali del personale di Todos.it</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Gestione contratti, beni aziendali consegnati, checklists e scadenze legali del personale di Todos.it</p>
         </div>
         <button className="btn btn-primary" onClick={openAddForm}>
           <span>+ Aggiungi Dipendente</span>
@@ -215,56 +365,36 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
               </div>
 
               {/* Sub Navigation del Fascicolo */}
-              <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', gap: '16px' }}>
-                <button
-                  onClick={() => setActiveSubTab('contract')}
-                  style={{
-                    padding: '8px 0',
-                    border: 'none',
-                    background: 'transparent',
-                    borderBottom: activeSubTab === 'contract' ? '2px solid var(--primary)' : '2px solid transparent',
-                    color: activeSubTab === 'contract' ? 'var(--primary)' : 'var(--text-secondary)',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  📄 Dati Contrattuali
-                </button>
-                <button
-                  onClick={() => setActiveSubTab('assets')}
-                  style={{
-                    padding: '8px 0',
-                    border: 'none',
-                    background: 'transparent',
-                    borderBottom: activeSubTab === 'assets' ? '2px solid var(--primary)' : '2px solid transparent',
-                    color: activeSubTab === 'assets' ? 'var(--primary)' : 'var(--text-secondary)',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  💻 Asset e Dotazione ({selectedEmp.assets?.length || 0})
-                </button>
-                <button
-                  onClick={() => setActiveSubTab('deadlines')}
-                  style={{
-                    padding: '8px 0',
-                    border: 'none',
-                    background: 'transparent',
-                    borderBottom: activeSubTab === 'deadlines' ? '2px solid var(--primary)' : '2px solid transparent',
-                    color: activeSubTab === 'deadlines' ? 'var(--primary)' : 'var(--text-secondary)',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  🚨 Scadenziere & Adempimenti
-                </button>
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', gap: '16px', overflowX: 'auto' }}>
+                {[
+                  { id: 'contract', label: '📄 Dati Contrattuali' },
+                  { id: 'assets', label: `💻 Asset & Dotazione (${selectedEmp.assets?.length || 0})` },
+                  { id: 'deadlines', label: '🚨 Adempimenti & Scadenze' },
+                  { id: 'checklist', label: `📋 Checklist (${checklistPercent}%)` },
+                  { id: 'performance', label: '📈 Valutazioni & OKR' }
+                ].map(subTab => (
+                  <button
+                    key={subTab.id}
+                    onClick={() => setActiveSubTab(subTab.id)}
+                    style={{
+                      padding: '8px 0',
+                      border: 'none',
+                      background: 'transparent',
+                      borderBottom: activeSubTab === subTab.id ? '2px solid var(--primary)' : '2px solid transparent',
+                      color: activeSubTab === subTab.id ? 'var(--primary)' : 'var(--text-secondary)',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {subTab.label}
+                  </button>
+                ))}
               </div>
 
               {/* Contenuto del Tab Selezionato */}
-              <div style={{ flexGrow: 1, padding: '4px 0' }}>
+              <div style={{ flexGrow: 1, padding: '4px 0', overflowY: 'auto', maxHeight: '500px' }}>
                 {/* 1. Dati Contrattuali */}
                 {activeSubTab === 'contract' && (
                   <div className="grid grid-cols-2" style={{ gap: '16px' }}>
@@ -280,7 +410,7 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Inquadramento Economico</h4>
                       <div style={{ background: 'var(--bg-app)', padding: '12px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem' }}>
-                        <div><strong>RAL Annuala Lorda:</strong> € {selectedEmp.ral?.toLocaleString('it-IT') || '0'}</div>
+                        <div><strong>RAL Annuale Lorda:</strong> € {selectedEmp.ral?.toLocaleString('it-IT') || '0'}</div>
                         <div><strong>Costo Mensile Stimato:</strong> € {Math.round((selectedEmp.ral * 1.37) / 12).toLocaleString('it-IT')} <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>(con oneri aziendali)</span></div>
                         <div><strong>Stato:</strong> <span className="badge badge-success">Attivo</span></div>
                       </div>
@@ -408,6 +538,237 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
                     </div>
                   </div>
                 )}
+
+                {/* 4. Checklist Onboarding/Offboarding */}
+                {activeSubTab === 'checklist' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className={`btn ${checklistType === 'Onboarding' ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{ padding: '4px 8px', fontSize: '0.72rem' }}
+                          onClick={() => setChecklistType('Onboarding')}
+                        >
+                          🚪 Accoglienza (Onboarding)
+                        </button>
+                        <button
+                          className={`btn ${checklistType === 'Offboarding' ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{ padding: '4px 8px', fontSize: '0.72rem' }}
+                          onClick={() => setChecklistType('Offboarding')}
+                        >
+                          🏃‍♂️ Uscita (Offboarding)
+                        </button>
+                      </div>
+                      
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>
+                        Avanzamento: <span style={{ color: 'var(--primary)' }}>{empCompletedTasks}/{empTotalTasks}</span> ({checklistPercent}%)
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ width: `${checklistPercent}%`, height: '100%', background: 'var(--success)', transition: 'width 0.3s ease' }} />
+                    </div>
+
+                    {/* Tasks List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                      {empChecklist.length === 0 ? (
+                        <div style={{ textAlignment: 'center', color: 'var(--text-secondary)', padding: '20px 0', fontSize: '0.8rem' }}>
+                          Nessun compito registrato per questa checklist.
+                        </div>
+                      ) : (
+                        empChecklist.map(task => (
+                          <div
+                            key={task.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 12px',
+                              background: 'var(--bg-app)',
+                              borderRadius: 'var(--radius-md)',
+                              borderLeft: task.is_completed ? '3px solid var(--success)' : '3px solid var(--text-muted)',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', cursor: 'pointer', flexGrow: 1 }}>
+                              <input
+                                type="checkbox"
+                                checked={task.is_completed}
+                                onChange={() => handleToggleChecklist(task.id, task.is_completed)}
+                                style={{ width: '15px', height: '15px', accentColor: 'var(--success)' }}
+                              />
+                              <span style={{ textDecoration: task.is_completed ? 'line-through' : 'none', color: task.is_completed ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                                {task.task_name}
+                              </span>
+                            </label>
+                            <span className="badge badge-primary" style={{ fontSize: '0.58rem', padding: '1px 4px' }}>
+                              {task.assigned_to}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Add Custom Task Form */}
+                    <form onSubmit={handleAddCustomChecklistTask} style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '8px' }}>
+                      <input
+                        type="text"
+                        required
+                        placeholder={`Aggiungi attività personalizzata di ${checklistType}...`}
+                        value={newChecklistTask}
+                        onChange={e => setNewChecklistTask(e.target.value)}
+                        style={{ flexGrow: 1, padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                      />
+                      <select
+                        value={newChecklistAssigned}
+                        onChange={e => setNewChecklistAssigned(e.target.value)}
+                        style={{ padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                      >
+                        <option value="HR">HR</option>
+                        <option value="IT">IT</option>
+                        <option value="Amministrazione">Admin</option>
+                      </select>
+                      <button type="submit" className="btn btn-primary" style={{ padding: '6px 12px' }}>Aggiungi</button>
+                    </form>
+                  </div>
+                )}
+
+                {/* 5. Performance Reviews & OKR */}
+                {activeSubTab === 'performance' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Valutazione Radar & Feedback */}
+                    <div className="grid grid-cols-2" style={{ gap: '16px' }}>
+                      {/* Sinistra: Radar Chart SVG */}
+                      <div className="glass-panel" style={{ borderRadius: 'var(--radius-md)', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '220px' }}>
+                        <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                          Radar Chart Competenziale ({activeReview ? activeReview.review_period : 'Nessuna Scheda'})
+                        </h5>
+                        
+                        {!activeReview ? (
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textAlignment: 'center', padding: '40px 10px' }}>
+                            Nessuna scheda di valutazione presente.<br />Clicca sul pulsante per redigerne una!
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <svg width="200" height="200" viewBox="0 0 200 200" style={{ overflow: 'visible' }}>
+                              {/* Rete Concentrica (Diamonds) per livelli da 1 a 5 */}
+                              {[14, 28, 42, 56, 70].map((r, i) => (
+                                <polygon
+                                  key={i}
+                                  points={`100,${100 - r} ${100 + r},100 100,${100 + r} ${100 - r},100`}
+                                  fill="none"
+                                  stroke="var(--border-color)"
+                                  strokeWidth="0.8"
+                                  strokeDasharray="2 2"
+                                />
+                              ))}
+                              
+                              {/* Assi Ortogonali */}
+                              <line x1="100" y1="30" x2="100" y2="170" stroke="var(--border-color)" strokeWidth="1" />
+                              <line x1="30" y1="100" x2="170" y2="100" stroke="var(--border-color)" strokeWidth="1" />
+
+                              {/* Etichette degli Assi */}
+                              <text x="100" y="22" textAnchor="middle" fontSize="7" fontWeight="bold" fill="var(--text-primary)">Tech</text>
+                              <text x="176" y="103" textAnchor="start" fontSize="7" fontWeight="bold" fill="var(--text-primary)">Teamwork</text>
+                              <text x="100" y="186" textAnchor="middle" fontSize="7" fontWeight="bold" fill="var(--text-primary)">Proactivity</text>
+                              <text x="24" y="103" textAnchor="end" fontSize="7" fontWeight="bold" fill="var(--text-primary)">Comm.</text>
+
+                              {/* Poligono Autovalutazione (Self) in Azzurro */}
+                              <polygon
+                                points={`${selfCoords.tech.x},${selfCoords.tech.y} ${selfCoords.teamwork.x},${selfCoords.teamwork.y} ${selfCoords.proactivity.x},${selfCoords.proactivity.y} ${selfCoords.comm.x},${selfCoords.comm.y}`}
+                                fill="rgba(59, 130, 246, 0.22)"
+                                stroke="#3b82f6"
+                                strokeWidth="1.5"
+                              />
+
+                              {/* Poligono Valutazione Manager in Rosso Todos */}
+                              <polygon
+                                points={`${managerCoords.tech.x},${managerCoords.tech.y} ${managerCoords.teamwork.x},${managerCoords.teamwork.y} ${managerCoords.proactivity.x},${managerCoords.proactivity.y} ${managerCoords.comm.x},${managerCoords.comm.y}`}
+                                fill="rgba(217, 4, 41, 0.22)"
+                                stroke="var(--primary)"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
+                            
+                            {/* Legenda Radar */}
+                            <div style={{ display: 'flex', gap: '10px', fontSize: '0.65rem', marginTop: '8px' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%' }} />
+                                <span>Self Rating</span>
+                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%' }} />
+                                <span>Manager Rating</span>
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Destra: Feedback & Nuova Review */}
+                      <div style={{ display: 'flex', flexDirection: 'column', justify: 'space-between', gap: '10px' }}>
+                        <div>
+                          <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px' }}>Feedback di Direzione</h5>
+                          <div style={{ background: 'var(--bg-app)', padding: '10px', borderRadius: 'var(--radius-md)', fontSize: '0.75rem', color: 'var(--text-primary)', fontStyle: 'italic', minHeight: '110px' }}>
+                            {activeReview?.overall_feedback || "Nessun feedback registrato per questo periodo."}
+                          </div>
+                        </div>
+                        
+                        <button className="btn btn-secondary" style={{ width: '100%', padding: '6px' }} onClick={handleOpenReviewForm}>
+                          📝 Redigi Nuova Valutazione
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Area OKR (Obiettivi e Progresso) */}
+                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+                      <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '8px' }}>🚀 Obiettivi Strategici (OKR)</h4>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {(!activeReview || !activeReview.okrs || activeReview.okrs.length === 0) ? (
+                          <div style={{ textAlignment: 'center', color: 'var(--text-secondary)', padding: '20px 0', fontSize: '0.75rem' }}>
+                            Nessun obiettivo strategico (OKR) assegnato a questo dipendente.<br />Compila una valutazione per definire gli obiettivi!
+                          </div>
+                        ) : (
+                          activeReview.okrs.map((okr, idx) => (
+                            <div key={idx} style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: 'var(--radius-md)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', fontWeight: 700, marginBottom: '4px' }}>
+                                <span>{okr.title}</span>
+                                <span style={{ color: 'var(--primary)' }}>{okr.progress}%</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={okr.progress}
+                                  onChange={(e) => handleOkrProgressChange(idx, e.target.value)}
+                                  style={{ flexGrow: 1, accentColor: 'var(--primary)', height: '4px', cursor: 'pointer' }}
+                                />
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Add OKR form */}
+                      {activeReview && (
+                        <form onSubmit={handleAddOkr} style={{ display: 'flex', gap: '8px', borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Definisci nuovo obiettivo OKR..."
+                            value={newOkrTitle}
+                            onChange={e => setNewOkrTitle(e.target.value)}
+                            style={{ flexGrow: 1, padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                          />
+                          <button type="submit" className="btn btn-primary" style={{ padding: '6px 12px' }}>Aggiungi OKR</button>
+                        </form>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -508,6 +869,94 @@ export default function EmployeesTab({ employees, candidates, onAddEmployee, onU
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setIsFormOpen(false)}>Annulla</button>
                 <button type="submit" className="btn btn-primary">{editingEmp ? "Salva Modifiche" : "Aggiungi Dipendente"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* FORM DI VALUTAZIONE PERFORMANCE (MODAL INTERNO) */}
+      {isReviewFormOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-panel" style={{ background: 'var(--bg-card)', maxWidth: '550px' }}>
+            <div className="modal-header">
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem' }}>
+                📝 Nuova Valutazione delle Performance
+              </h3>
+              <button style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => setIsReviewFormOpen(false)}>×</button>
+            </div>
+            <form onSubmit={handleSaveReview}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '70vh', overflowY: 'auto' }}>
+                
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Periodo di Valutazione</label>
+                  <input
+                    type="text"
+                    required
+                    value={reviewPeriod}
+                    onChange={e => setReviewPeriod(e.target.value)}
+                    placeholder="es. Q1 2026 o Anno 2026"
+                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
+                  {/* Autovalutazione */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <h4 style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>Autovalutazione (Self)</h4>
+                    
+                    {[
+                      { label: 'Competenze Tecniche', val: selfTech, setVal: setSelfTech },
+                      { label: 'Lavoro di Gruppo', val: selfTeamwork, setVal: setSelfTeamwork },
+                      { label: 'Proattività', val: selfProactivity, setVal: setSelfProactivity },
+                      { label: 'Comunicazione', val: selfComm, setVal: setSelfComm }
+                    ].map((item, idx) => (
+                      <div key={idx}>
+                        <label style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                          <span>{item.label}</span>
+                          <strong>{item.val}/5</strong>
+                        </label>
+                        <input type="range" min="1" max="5" value={item.val} onChange={e => item.setVal(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Valutazione Manager */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <h4 style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>Valutazione Direzione</h4>
+                    
+                    {[
+                      { label: 'Competenze Tecniche', val: managerTech, setVal: setManagerTech },
+                      { label: 'Lavoro di Gruppo', val: managerTeamwork, setVal: setManagerTeamwork },
+                      { label: 'Proattività', val: managerProactivity, setVal: setManagerProactivity },
+                      { label: 'Comunicazione', val: managerComm, setVal: setManagerComm }
+                    ].map((item, idx) => (
+                      <div key={idx}>
+                        <label style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                          <span>{item.label}</span>
+                          <strong>{item.val}/5</strong>
+                        </label>
+                        <input type="range" min="1" max="5" value={item.val} onChange={e => item.setVal(parseInt(e.target.value))} style={{ width: '100%', accentColor: 'var(--primary)' }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '8px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Feedback Globale Scritto</label>
+                  <textarea
+                    rows="3"
+                    value={reviewFeedback}
+                    onChange={e => setReviewFeedback(e.target.value)}
+                    placeholder="Fornisci una sintesi costruttiva sulla crescita del dipendente e le prospettive future..."
+                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem', resize: 'none' }}
+                  />
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setIsReviewFormOpen(false)}>Annulla</button>
+                <button type="submit" className="btn btn-primary">Registra Scheda</button>
               </div>
             </form>
           </div>

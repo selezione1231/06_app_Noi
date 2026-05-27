@@ -324,6 +324,87 @@ const DEFAULT_LEAVES = [
   }
 ]
 
+const DEFAULT_CHECKLISTS = [
+  // Mario Rossi - Onboarding Completato (100%)
+  { id: 'ch-1', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', type: 'Onboarding', task_name: 'Firma contratto assunzione', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2024-01-15' },
+  { id: 'ch-2', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', type: 'Onboarding', task_name: 'Creazione email e account Slack', assigned_to: 'IT', is_completed: true, completed_at: '2024-01-15' },
+  { id: 'ch-3', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', type: 'Onboarding', task_name: 'Consegna laptop e smartphone', assigned_to: 'IT', is_completed: true, completed_at: '2024-01-15' },
+  { id: 'ch-4', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', type: 'Onboarding', task_name: 'Configurazione accessi GitHub', assigned_to: 'IT', is_completed: true, completed_at: '2024-01-16' },
+  { id: 'ch-5', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', type: 'Onboarding', task_name: 'Registrazione portale UNILAV', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2024-01-15' },
+  { id: 'ch-6', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', type: 'Onboarding', task_name: 'Corsi sicurezza obbligatori', assigned_to: 'HR', is_completed: true, completed_at: '2024-01-20' },
+
+  // Laura Bianchi - Onboarding (83%)
+  { id: 'ch-7', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', type: 'Onboarding', task_name: 'Firma contratto assunzione', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2024-06-01' },
+  { id: 'ch-8', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', type: 'Onboarding', task_name: 'Creazione email e account Slack', assigned_to: 'IT', is_completed: true, completed_at: '2024-06-01' },
+  { id: 'ch-9', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', type: 'Onboarding', task_name: 'Consegna laptop', assigned_to: 'IT', is_completed: true, completed_at: '2024-06-01' },
+  { id: 'ch-10', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', type: 'Onboarding', task_name: 'Registrazione portale UNILAV', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2024-06-01' },
+  { id: 'ch-11', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', type: 'Onboarding', task_name: 'Corsi sicurezza obbligatori', assigned_to: 'HR', is_completed: false, completed_at: null },
+  { id: 'ch-12', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', type: 'Onboarding', task_name: 'Accessi al CRM aziendale', assigned_to: 'IT', is_completed: true, completed_at: '2024-06-02' },
+
+  // Alessandro Neri - Onboarding completato, Offboarding in corso
+  { id: 'ch-13', employee_id: 'demo-emp-3', employee_name: 'Alessandro Neri', type: 'Onboarding', task_name: 'Firma contratto assunzione', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2023-03-10' },
+  { id: 'ch-14', employee_id: 'demo-emp-3', employee_name: 'Alessandro Neri', type: 'Onboarding', task_name: 'Consegna laptop aziendale', assigned_to: 'IT', is_completed: true, completed_at: '2023-03-10' },
+
+  // Sofia Gialli - Onboarding (66%)
+  { id: 'ch-15', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', type: 'Onboarding', task_name: 'Firma contratto assunzione', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2025-09-01' },
+  { id: 'ch-16', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', type: 'Onboarding', task_name: 'Creazione email e account Slack', assigned_to: 'IT', is_completed: true, completed_at: '2025-09-01' },
+  { id: 'ch-17', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', type: 'Onboarding', task_name: 'Consegna laptop', assigned_to: 'IT', is_completed: false, completed_at: null },
+  { id: 'ch-18', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', type: 'Onboarding', task_name: 'Registrazione portale UNILAV', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2025-09-01' },
+  { id: 'ch-19', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', type: 'Onboarding', task_name: 'Corsi sicurezza obbligatori', assigned_to: 'HR', is_completed: false, completed_at: null },
+  { id: 'ch-20', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', type: 'Onboarding', task_name: 'Accessi al gestionale contabilità', assigned_to: 'IT', is_completed: true, completed_at: '2025-09-02' },
+
+  // Valerio Verdi - Onboarding iniziale (33%)
+  { id: 'ch-21', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', type: 'Onboarding', task_name: 'Firma contratto assunzione', assigned_to: 'Amministrazione', is_completed: true, completed_at: '2026-05-02' },
+  { id: 'ch-22', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', type: 'Onboarding', task_name: 'Creazione email e account Slack', assigned_to: 'IT', is_completed: true, completed_at: '2026-05-02' },
+  { id: 'ch-23', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', type: 'Onboarding', task_name: 'Consegna laptop', assigned_to: 'IT', is_completed: false, completed_at: null },
+  { id: 'ch-24', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', type: 'Onboarding', task_name: 'Registrazione portale UNILAV', assigned_to: 'Amministrazione', is_completed: false, completed_at: null },
+  { id: 'ch-25', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', type: 'Onboarding', task_name: 'Corsi sicurezza obbligatori', assigned_to: 'HR', is_completed: false, completed_at: null },
+  { id: 'ch-26', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', type: 'Onboarding', task_name: 'Configurazione accessi GitHub', assigned_to: 'IT', is_completed: false, completed_at: null }
+]
+
+const DEFAULT_PERFORMANCES = [
+  {
+    id: 'perf-1',
+    employee_id: 'demo-emp-1',
+    employee_name: 'Mario Rossi',
+    review_period: 'Q1 2026',
+    self_rating: { tech: 5, teamwork: 4, proactivity: 4, communication: 3 },
+    manager_rating: { tech: 5, teamwork: 3, proactivity: 4, communication: 4 },
+    overall_feedback: 'Mario dimostra una competenza tecnica straordinaria nello sviluppo dell\'architettura frontend di Todos.it. Ha gestito molto bene il refactoring dello stato globale. Deve migliorare nel coordinamento del team junior, dove a volte tende a delegare poco.',
+    okrs: [
+      { title: 'Refactoring del modulo Kanban', progress: 100 },
+      { title: 'Velocizzare la build del 20%', progress: 80 },
+      { title: 'Formazione interna su Zustand', progress: 50 }
+    ]
+  },
+  {
+    id: 'perf-2',
+    employee_id: 'demo-emp-2',
+    employee_name: 'Laura Bianchi',
+    review_period: 'Q1 2026',
+    self_rating: { tech: 3, teamwork: 5, proactivity: 4, communication: 5 },
+    manager_rating: { tech: 2, teamwork: 5, proactivity: 4, communication: 4 },
+    overall_feedback: 'Laura è una risorsa fantastica per l\'aspetto commerciale ed il contatto clienti. Molto forte nel lavoro di squadra e nella comunicazione, solida nel chiudere lead. Si consiglia un training specifico sull\'uso tecnico dei nostri gestionali interni.',
+    okrs: [
+      { title: 'Chiudere 10 nuovi contratti B2B', progress: 70 },
+      { title: 'Familiarizzare con il gestionale CRM', progress: 95 }
+    ]
+  },
+  {
+    id: 'perf-3',
+    employee_id: 'demo-emp-3',
+    employee_name: 'Alessandro Neri',
+    review_period: 'Q1 2026',
+    self_rating: { tech: 4, teamwork: 4, proactivity: 5, communication: 5 },
+    manager_rating: { tech: 4, teamwork: 4, proactivity: 5, communication: 5 },
+    overall_feedback: 'Alessandro gestisce il reparto risorse umane con grande proattività ed empatia. Ha avviato ottime iniziative di onboarding e risolto molteplici criticità contrattuali in modo eccellente.',
+    okrs: [
+      { title: 'Pianificare piano welfare aziendale', progress: 90 },
+      { title: 'Ridurre time-to-hire del 15%', progress: 60 }
+    ]
+  }
+]
+
 export default function App() {
   const [user, setUser] = useState(null)
   const [isDemo, setIsDemo] = useState(true)
@@ -337,6 +418,8 @@ export default function App() {
   const [jobTemplates, setJobTemplates] = useState([])
   const [employees, setEmployees] = useState([])
   const [leaves, setLeaves] = useState([])
+  const [checklists, setChecklists] = useState([])
+  const [performances, setPerformances] = useState([])
 
   // Navigazione principale: 'active', 'archived', 'templates', 'appointments', 'employees', 'absences'
   const [navTab, setNavTab] = useState('active')
@@ -405,8 +488,10 @@ export default function App() {
     const localTemplates = localStorage.getItem('demo-job-templates')
     const localEmployees = localStorage.getItem('demo-employees')
     const localLeaves = localStorage.getItem('demo-leaves')
+    const localChecklists = localStorage.getItem('demo-checklists')
+    const localPerformances = localStorage.getItem('demo-performances')
 
-    if (localJobs && localCandidates && localNotes && localAppointments && localTemplates && localEmployees && localLeaves) {
+    if (localJobs && localCandidates && localNotes && localAppointments && localTemplates && localEmployees && localLeaves && localChecklists && localPerformances) {
       setJobs(JSON.parse(localJobs))
       setCandidates(JSON.parse(localCandidates))
       setNotes(JSON.parse(localNotes))
@@ -414,6 +499,8 @@ export default function App() {
       setJobTemplates(JSON.parse(localTemplates))
       setEmployees(JSON.parse(localEmployees))
       setLeaves(JSON.parse(localLeaves))
+      setChecklists(JSON.parse(localChecklists))
+      setPerformances(JSON.parse(localPerformances))
     } else {
       localStorage.setItem('demo-jobs', JSON.stringify(DEFAULT_JOBS))
       localStorage.setItem('demo-candidates', JSON.stringify(DEFAULT_CANDIDATES))
@@ -422,6 +509,8 @@ export default function App() {
       localStorage.setItem('demo-job-templates', JSON.stringify(DEFAULT_TEMPLATES))
       localStorage.setItem('demo-employees', JSON.stringify(DEFAULT_EMPLOYEES))
       localStorage.setItem('demo-leaves', JSON.stringify(DEFAULT_LEAVES))
+      localStorage.setItem('demo-checklists', JSON.stringify(DEFAULT_CHECKLISTS))
+      localStorage.setItem('demo-performances', JSON.stringify(DEFAULT_PERFORMANCES))
 
       setJobs(DEFAULT_JOBS)
       setCandidates(DEFAULT_CANDIDATES)
@@ -430,6 +519,8 @@ export default function App() {
       setJobTemplates(DEFAULT_TEMPLATES)
       setEmployees(DEFAULT_EMPLOYEES)
       setLeaves(DEFAULT_LEAVES)
+      setChecklists(DEFAULT_CHECKLISTS)
+      setPerformances(DEFAULT_PERFORMANCES)
     }
   }
 
@@ -484,6 +575,22 @@ export default function App() {
         .order('created_at', { ascending: false })
       if (errLeaves) throw errLeaves
       setLeaves(dbLeaves || [])
+
+      // Carica Checklist
+      const { data: dbChecklists, error: errChecklists } = await supabase
+        .from('06app_CRM_HR_checklists')
+        .select('*')
+        .order('created_at', { ascending: true })
+      if (errChecklists) throw errChecklists
+      setChecklists(dbChecklists || [])
+
+      // Carica Performance
+      const { data: dbPerformances, error: errPerformances } = await supabase
+        .from('06app_CRM_HR_performances')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (errPerformances) throw errPerformances
+      setPerformances(dbPerformances || [])
     } catch (e) {
       console.error('Errore durante il caricamento da Supabase:', e)
       alert('Errore nel sincronizzare i dati da Supabase: ' + e.message)
@@ -847,10 +954,35 @@ export default function App() {
     const newId = empData.id || 'demo-emp-' + Math.random().toString(36).substr(2, 9)
     const newEmp = { ...empData, id: newId, created_at: empData.created_at || new Date().toISOString() }
 
+    const onboardingTasks = [
+      { task_name: 'Firma contratto assunzione', assigned_to: 'Amministrazione' },
+      { task_name: 'Creazione email e account Slack', assigned_to: 'IT' },
+      { task_name: 'Consegna laptop aziendale', assigned_to: 'IT' },
+      { task_name: 'Registrazione portale UNILAV', assigned_to: 'Amministrazione' },
+      { task_name: 'Corsi sicurezza obbligatori', assigned_to: 'HR' },
+      { task_name: 'Configurazione accessi GitHub', assigned_to: 'IT' }
+    ]
+
     if (isDemo) {
       const updatedEmployees = [newEmp, ...employees]
       setEmployees(updatedEmployees)
       localStorage.setItem('demo-employees', JSON.stringify(updatedEmployees))
+
+      // Inizializzazione automatica checklist onboarding per la demo
+      const defaultTasks = onboardingTasks.map((task, index) => ({
+        id: `demo-ch-auto-${newId}-${index}-${Math.random().toString(36).substr(2, 5)}`,
+        employee_id: newId,
+        employee_name: newEmp.name,
+        type: 'Onboarding',
+        task_name: task.task_name,
+        assigned_to: task.assigned_to,
+        is_completed: false,
+        completed_at: null
+      }))
+      const updatedChecklists = [...checklists, ...defaultTasks]
+      setChecklists(updatedChecklists)
+      localStorage.setItem('demo-checklists', JSON.stringify(updatedChecklists))
+
       return newEmp
     } else {
       try {
@@ -859,8 +991,26 @@ export default function App() {
           .insert([empData])
           .select()
         if (error) throw error
+        
+        const insertedEmp = data[0]
+        // Inizializzazione automatica checklist onboarding in Supabase
+        const defaultTasksDb = onboardingTasks.map(task => ({
+          employee_id: insertedEmp.id,
+          employee_name: insertedEmp.name,
+          type: 'Onboarding',
+          task_name: task.task_name,
+          assigned_to: task.assigned_to,
+          is_completed: false
+        }))
+        const { error: errChecklistInit } = await supabase
+          .from('06app_CRM_HR_checklists')
+          .insert(defaultTasksDb)
+        if (errChecklistInit) {
+          console.error("Errore nell'autoinizializzazione della checklist:", errChecklistInit)
+        }
+
         await loadSupabaseData()
-        return data[0]
+        return insertedEmp
       } catch (e) {
         alert("Errore nell'inserimento del dipendente su Supabase: " + e.message)
       }
@@ -890,10 +1040,16 @@ export default function App() {
     if (isDemo) {
       const updatedEmployees = employees.filter(e => e.id !== empId)
       const updatedLeaves = leaves.filter(l => l.employee_id !== empId)
+      const updatedChecklists = checklists.filter(c => c.employee_id !== empId)
+      const updatedPerformances = performances.filter(p => p.employee_id !== empId)
       setEmployees(updatedEmployees)
       setLeaves(updatedLeaves)
+      setChecklists(updatedChecklists)
+      setPerformances(updatedPerformances)
       localStorage.setItem('demo-employees', JSON.stringify(updatedEmployees))
       localStorage.setItem('demo-leaves', JSON.stringify(updatedLeaves))
+      localStorage.setItem('demo-checklists', JSON.stringify(updatedChecklists))
+      localStorage.setItem('demo-performances', JSON.stringify(updatedPerformances))
     } else {
       try {
         const { error } = await supabase
@@ -967,6 +1123,192 @@ export default function App() {
         await loadSupabaseData()
       } catch (e) {
         alert("Errore nella cancellazione della richiesta su Supabase: " + e.message)
+      }
+    }
+  }
+
+  // --- GESTIONE CHECKLIST (HRIS) ---
+  const handleUpdateChecklistTask = async (taskId, isCompleted) => {
+    if (isDemo) {
+      const updatedChecklists = checklists.map(c => {
+        if (c.id === taskId) {
+          return {
+            ...c,
+            is_completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString().split('T')[0] : null
+          }
+        }
+        return c
+      })
+      setChecklists(updatedChecklists)
+      localStorage.setItem('demo-checklists', JSON.stringify(updatedChecklists))
+    } else {
+      try {
+        const { error } = await supabase
+          .from('06app_CRM_HR_checklists')
+          .update({
+            is_completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : null
+          })
+          .eq('id', taskId)
+        if (error) throw error
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nell'aggiornamento del compito della checklist su Supabase: " + e.message)
+      }
+    }
+  }
+
+  const handleAddChecklistTask = async (taskData) => {
+    if (isDemo) {
+      const newId = 'demo-ch-' + Math.random().toString(36).substr(2, 9)
+      const newTask = {
+        ...taskData,
+        id: newId,
+        created_at: new Date().toISOString()
+      }
+      const updatedChecklists = [...checklists, newTask]
+      setChecklists(updatedChecklists)
+      localStorage.setItem('demo-checklists', JSON.stringify(updatedChecklists))
+    } else {
+      try {
+        const { error } = await supabase
+          .from('06app_CRM_HR_checklists')
+          .insert([taskData])
+        if (error) throw error
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nell'aggiunta del compito su Supabase: " + e.message)
+      }
+    }
+  }
+
+  // --- GESTIONE PERFORMANCE & OKR (HRIS) ---
+  const handleSavePerformanceReview = async (reviewData) => {
+    if (isDemo) {
+      const existingIdx = performances.findIndex(p => p.employee_id === reviewData.employee_id && p.review_period === reviewData.review_period)
+      let updatedPerformances
+      if (existingIdx > -1) {
+        const existing = performances[existingIdx]
+        const updatedReview = {
+          ...existing,
+          ...reviewData,
+          okrs: existing.okrs || []
+        }
+        updatedPerformances = [...performances]
+        updatedPerformances[existingIdx] = updatedReview
+      } else {
+        const newReview = {
+          ...reviewData,
+          id: 'demo-perf-' + Math.random().toString(36).substr(2, 9),
+          okrs: [],
+          created_at: new Date().toISOString()
+        }
+        updatedPerformances = [newReview, ...performances]
+      }
+      setPerformances(updatedPerformances)
+      localStorage.setItem('demo-performances', JSON.stringify(updatedPerformances))
+    } else {
+      try {
+        const { data: existing, error: findError } = await supabase
+          .from('06app_CRM_HR_performances')
+          .select('*')
+          .eq('employee_id', reviewData.employee_id)
+          .eq('review_period', reviewData.review_period)
+          .maybeSingle()
+        
+        if (findError) throw findError
+
+        if (existing) {
+          const { error: updateError } = await supabase
+            .from('06app_CRM_HR_performances')
+            .update({
+              self_rating: reviewData.self_rating,
+              manager_rating: reviewData.manager_rating,
+              overall_feedback: reviewData.overall_feedback
+            })
+            .eq('id', existing.id)
+          if (updateError) throw updateError
+        } else {
+          const { error: insertError } = await supabase
+            .from('06app_CRM_HR_performances')
+            .insert([{
+              ...reviewData,
+              okrs: []
+            }])
+          if (insertError) throw insertError
+        }
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nel salvataggio della valutazione delle performance su Supabase: " + e.message)
+      }
+    }
+  }
+
+  const handleUpdateOkrProgress = async (employeeId, okrIndex, progressVal) => {
+    if (isDemo) {
+      const isFirstMatch = performances.findIndex(x => x.employee_id === employeeId)
+      if (isFirstMatch > -1) {
+        const updatedPerformances = [...performances]
+        const p = updatedPerformances[isFirstMatch]
+        const updatedOkrs = [...(p.okrs || [])]
+        if (updatedOkrs[okrIndex]) {
+          updatedOkrs[okrIndex] = { ...updatedOkrs[okrIndex], progress: progressVal }
+        }
+        updatedPerformances[isFirstMatch] = { ...p, okrs: updatedOkrs }
+        setPerformances(updatedPerformances)
+        localStorage.setItem('demo-performances', JSON.stringify(updatedPerformances))
+      }
+    } else {
+      try {
+        const activeReview = performances.find(p => p.employee_id === employeeId)
+        if (!activeReview) return
+        
+        const updatedOkrs = [...(activeReview.okrs || [])]
+        if (updatedOkrs[okrIndex]) {
+          updatedOkrs[okrIndex] = { ...updatedOkrs[okrIndex], progress: progressVal }
+        }
+
+        const { error } = await supabase
+          .from('06app_CRM_HR_performances')
+          .update({ okrs: updatedOkrs })
+          .eq('id', activeReview.id)
+        
+        if (error) throw error
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nell'aggiornamento del progresso dell'OKR su Supabase: " + e.message)
+      }
+    }
+  }
+
+  const handleAddOkrObjective = async (employeeId, title) => {
+    if (isDemo) {
+      const firstMatchIdx = performances.findIndex(p => p.employee_id === employeeId)
+      if (firstMatchIdx > -1) {
+        const updatedPerformances = [...performances]
+        const p = updatedPerformances[firstMatchIdx]
+        const updatedOkrs = [...(p.okrs || []), { title, progress: 0 }]
+        updatedPerformances[firstMatchIdx] = { ...p, okrs: updatedOkrs }
+        setPerformances(updatedPerformances)
+        localStorage.setItem('demo-performances', JSON.stringify(updatedPerformances))
+      }
+    } else {
+      try {
+        const activeReview = performances.find(p => p.employee_id === employeeId)
+        if (!activeReview) return
+        
+        const updatedOkrs = [...(activeReview.okrs || []), { title, progress: 0 }]
+
+        const { error } = await supabase
+          .from('06app_CRM_HR_performances')
+          .update({ okrs: updatedOkrs })
+          .eq('id', activeReview.id)
+        
+        if (error) throw error
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nell'inserimento dell'OKR su Supabase: " + e.message)
       }
     }
   }
@@ -1246,6 +1588,13 @@ export default function App() {
                 onAddEmployee={handleAddEmployee}
                 onUpdateEmployee={handleUpdateEmployee}
                 onDeleteEmployee={handleDeleteEmployee}
+                checklists={checklists}
+                performances={performances}
+                onUpdateChecklistTask={handleUpdateChecklistTask}
+                onAddChecklistTask={handleAddChecklistTask}
+                onSavePerformanceReview={handleSavePerformanceReview}
+                onUpdateOkrProgress={handleUpdateOkrProgress}
+                onAddOkrObjective={handleAddOkrObjective}
               />
             ) : navTab === 'absences' ? (
               <AbsencesTab
