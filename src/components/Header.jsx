@@ -31,19 +31,21 @@ export default function Header({ user, isDemo, onLogout, onOpenJobModal }) {
     }}>
       {/* Brand Logo & Info */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: 'var(--radius-md)',
-          background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
-          color: 'white',
-          boxShadow: '0 2px 6px rgba(217, 4, 41, 0.15)'
-        }}>
-          <Award size={18} />
-        </div>
+        <img 
+          src="/todos-logo.png" 
+          alt="Todos Logo" 
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            boxShadow: '0 2px 6px rgba(217, 4, 41, 0.15)'
+          }} 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/todos-logo.jpg';
+          }}
+        />
         <div>
           <span style={{
             fontFamily: 'var(--font-display)',

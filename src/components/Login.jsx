@@ -87,27 +87,29 @@ export default function Login({ onLoginSuccess, setDemoMode }) {
       }}>
         {/* Header Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '60px',
-            height: '60px',
-            borderRadius: 'var(--radius-md)',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
-            color: 'white',
-            marginBottom: '16px',
-            boxShadow: '0 8px 16px rgba(99, 102, 241, 0.25)'
-          }}>
-            <Lock size={28} />
-          </div>
+          <img 
+            src="/todos-logo.png" 
+            alt="Todos Logo" 
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              marginBottom: '16px',
+              boxShadow: '0 8px 16px rgba(217, 4, 41, 0.25)'
+            }} 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/todos-logo.jpg';
+            }}
+          />
           <h1 style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 700,
             fontSize: '1.8rem',
             letterSpacing: '-0.02em',
             marginBottom: '6px'
-          }}>HR Select CRM</h1>
+          }}>Todos Select</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Accedi per gestire le tue selezioni ed analizzare i CV
           </p>
