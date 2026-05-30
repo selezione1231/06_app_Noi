@@ -499,3 +499,28 @@ input, textarea, select, button {
     grid-template-columns: 1fr;
   }
 }
+
+/* Animations for Notifications Bell */
+@keyframes bell-bounce {
+  0% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(15deg);
+  }
+  30% {
+    transform: rotate(-15deg);
+  }
+  45% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

@@ -11,8 +11,9 @@ import AbsencesTab from './components/AbsencesTab'
 import ExpensesTab from './components/ExpensesTab'
 import EmployeePortalTab from './components/EmployeePortalTab'
 import AnalyticsTab from './components/AnalyticsTab'
+import ShiftPlannerTab from './components/ShiftPlannerTab'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
-import { Calendar, Users, Briefcase, Video, Trash2, ExternalLink, ShieldAlert, FolderArchive, FileCode, Receipt, BarChart3 } from 'lucide-react'
+import { Calendar, Users, Briefcase, Video, Trash2, ExternalLink, ShieldAlert, FolderArchive, FileCode, Receipt, BarChart3, Clock, CalendarDays } from 'lucide-react'
 
 // --- SEED DATI DEMO DI FALLBACK ---
 const DEFAULT_JOBS = [
@@ -416,6 +417,38 @@ const DEFAULT_EXPENSES = [
   { id: 'exp-5', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', expense_date: '2026-05-25', merchant: 'Pranzo di Lavoro - Bar Sport', amount: 18.00, category: 'Pasti', receipt_name: 'Scontrino_Pasti_BarSport.jpg', status: 'Pending', notes: 'Pranzo durante corso di formazione esterno' }
 ]
 
+const generateDemoShifts = (employeesList) => {
+  const weekDates = [];
+  const current = new Date();
+  const day = current.getDay();
+  const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(current.setDate(diff));
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDates.push(d.toISOString().split('T')[0]);
+  }
+
+  return [
+    { id: 'sh-1', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', shift_date: weekDates[0], start_time: '08:00', end_time: '16:00', shift_type: 'Mattina', notes: 'Ufficio Roma' },
+    { id: 'sh-2', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', shift_date: weekDates[2], start_time: '08:00', end_time: '16:00', shift_type: 'Mattina', notes: 'Presidio Tecnico' },
+    { id: 'sh-3', employee_id: 'demo-emp-1', employee_name: 'Mario Rossi', shift_date: weekDates[4], start_time: '08:00', end_time: '16:00', shift_type: 'Mattina', notes: 'Reperibilità' },
+    
+    { id: 'sh-4', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', shift_date: weekDates[0], start_time: '14:00', end_time: '22:00', shift_type: 'Pomeriggio', notes: 'Ufficio Milano' },
+    { id: 'sh-5', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', shift_date: weekDates[1], start_time: '14:00', end_time: '22:00', shift_type: 'Pomeriggio', notes: 'Supporto Commerciale' },
+    { id: 'sh-6', employee_id: 'demo-emp-2', employee_name: 'Laura Bianchi', shift_date: weekDates[3], start_time: '14:00', end_time: '22:00', shift_type: 'Pomeriggio', notes: 'Customer Care' },
+    
+    { id: 'sh-7', employee_id: 'demo-emp-3', employee_name: 'Alessandro Neri', shift_date: weekDates[2], start_time: '22:00', end_time: '06:00', shift_type: 'Notte', notes: 'Supervisione Notturna' },
+    { id: 'sh-8', employee_id: 'demo-emp-3', employee_name: 'Alessandro Neri', shift_date: weekDates[3], start_time: '22:00', end_time: '06:00', shift_type: 'Notte', notes: 'Manutenzione Sistemi' },
+    
+    { id: 'sh-9', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', shift_date: weekDates[1], start_time: '09:00', end_time: '18:00', shift_type: 'Custom', notes: 'Corso Recruiting' },
+    { id: 'sh-10', employee_id: 'demo-emp-4', employee_name: 'Sofia Gialli', shift_date: weekDates[2], start_time: '09:00', end_time: '18:00', shift_type: 'Custom', notes: 'Interviste Candidati' },
+    
+    { id: 'sh-11', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', shift_date: weekDates[0], start_time: '14:00', end_time: '22:00', shift_type: 'Pomeriggio', notes: 'Affiancamento' },
+    { id: 'sh-12', employee_id: 'demo-emp-5', employee_name: 'Valerio Verdi', shift_date: weekDates[4], start_time: '08:00', end_time: '16:00', shift_type: 'Mattina', notes: 'Consolidamento Dati' }
+  ];
+};
+
 export default function App() {
   const [user, setUser] = useState(null)
   const [isDemo, setIsDemo] = useState(true)
@@ -432,6 +465,16 @@ export default function App() {
   const [checklists, setChecklists] = useState([])
   const [performances, setPerformances] = useState([])
   const [expenses, setExpenses] = useState([])
+  const [shifts, setShifts] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [dismissedNotificationIds, setDismissedNotificationIds] = useState(() => {
+    try {
+      const local = localStorage.getItem('demo-dismissed-notifications')
+      return local ? JSON.parse(local) : []
+    } catch {
+      return []
+    }
+  })
 
   // Navigazione principale: 'active', 'archived', 'templates', 'appointments', 'employees', 'absences'
   const [navTab, setNavTab] = useState('active')
@@ -503,8 +546,9 @@ export default function App() {
     const localChecklists = localStorage.getItem('demo-checklists')
     const localPerformances = localStorage.getItem('demo-performances')
     const localExpenses = localStorage.getItem('demo-expenses')
+    const localShifts = localStorage.getItem('demo-shifts')
 
-    if (localJobs && localCandidates && localNotes && localAppointments && localTemplates && localEmployees && localLeaves && localChecklists && localPerformances && localExpenses) {
+    if (localJobs && localCandidates && localNotes && localAppointments && localTemplates && localEmployees && localLeaves && localChecklists && localPerformances && localExpenses && localShifts) {
       setJobs(JSON.parse(localJobs))
       setCandidates(JSON.parse(localCandidates))
       setNotes(JSON.parse(localNotes))
@@ -515,7 +559,10 @@ export default function App() {
       setChecklists(JSON.parse(localChecklists))
       setPerformances(JSON.parse(localPerformances))
       setExpenses(JSON.parse(localExpenses))
+      setShifts(JSON.parse(localShifts))
     } else {
+      const initialShifts = generateDemoShifts(DEFAULT_EMPLOYEES)
+
       localStorage.setItem('demo-jobs', JSON.stringify(DEFAULT_JOBS))
       localStorage.setItem('demo-candidates', JSON.stringify(DEFAULT_CANDIDATES))
       localStorage.setItem('demo-notes', JSON.stringify(DEFAULT_NOTES))
@@ -526,6 +573,7 @@ export default function App() {
       localStorage.setItem('demo-checklists', JSON.stringify(DEFAULT_CHECKLISTS))
       localStorage.setItem('demo-performances', JSON.stringify(DEFAULT_PERFORMANCES))
       localStorage.setItem('demo-expenses', JSON.stringify(DEFAULT_EXPENSES))
+      localStorage.setItem('demo-shifts', JSON.stringify(initialShifts))
 
       setJobs(DEFAULT_JOBS)
       setCandidates(DEFAULT_CANDIDATES)
@@ -537,6 +585,7 @@ export default function App() {
       setChecklists(DEFAULT_CHECKLISTS)
       setPerformances(DEFAULT_PERFORMANCES)
       setExpenses(DEFAULT_EXPENSES)
+      setShifts(initialShifts)
     }
   }
 
@@ -640,11 +689,250 @@ export default function App() {
         console.warn("Tabella '06app_CRM_HR_expenses' non trovata in Supabase. Esegui la migrazione SQL.", expErr)
         setExpenses([])
       }
+
+      // Carica Turni con gestione errore soft
+      try {
+        const { data: dbShifts, error: errShifts } = await supabase
+          .from('06app_CRM_HR_shifts')
+          .select('*')
+          .order('shift_date', { ascending: true })
+        if (errShifts) throw errShifts
+        setShifts(dbShifts || [])
+      } catch (shiftErr) {
+        console.warn("Tabella '06app_CRM_HR_shifts' non trovata in Supabase. Esegui la migrazione SQL.", shiftErr)
+        setShifts([])
+      }
     } catch (e) {
       console.error('Errore durante il caricamento da Supabase:', e)
       alert('Errore nel sincronizzare i dati da Supabase: ' + e.message)
     }
   }
+
+  // --- ENGINE AUTOMATICO DI SCADENZE & NOTIFICHE (FASE 7) ---
+  useEffect(() => {
+    if (!user) return;
+    
+    const dynamicAlerts = [];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+    thirtyDaysFromNow.setHours(23,59,59,999);
+    
+    const isExpiringSoon = (dateStr) => {
+      if (!dateStr) return false;
+      const expiry = new Date(dateStr);
+      return expiry >= today && expiry <= thirtyDaysFromNow;
+    };
+    
+    const isExpired = (dateStr) => {
+      if (!dateStr) return false;
+      const expiry = new Date(dateStr);
+      return expiry < today;
+    };
+
+    const getDaysLeft = (dateStr) => {
+      if (!dateStr) return 0;
+      const diffTime = new Date(dateStr) - today;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    // A. Controlla scadenze dipendenti
+    employees.forEach(emp => {
+      // Documento di Identità
+      if (emp.document_id_expiry) {
+        const days = getDaysLeft(emp.document_id_expiry);
+        if (isExpired(emp.document_id_expiry)) {
+          dynamicAlerts.push({
+            id: `expiry-doc-${emp.id}`,
+            title: `Documento Scaduto - ${emp.name}`,
+            description: `La carta d'identità è scaduta il ${emp.document_id_expiry}.`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        } else if (isExpiringSoon(emp.document_id_expiry)) {
+          dynamicAlerts.push({
+            id: `expiry-doc-${emp.id}`,
+            title: `Documento in Scadenza - ${emp.name}`,
+            description: `La carta d'identità scade tra ${days} giorni (${emp.document_id_expiry}).`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        }
+      }
+
+      // Corso Sicurezza
+      if (emp.safety_course_expiry) {
+        const days = getDaysLeft(emp.safety_course_expiry);
+        if (isExpired(emp.safety_course_expiry)) {
+          dynamicAlerts.push({
+            id: `expiry-safety-${emp.id}`,
+            title: `Corso Sicurezza Scaduto - ${emp.name}`,
+            description: `Il corso di sicurezza obbligatorio è scaduto il ${emp.safety_course_expiry}.`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        } else if (isExpiringSoon(emp.safety_course_expiry)) {
+          dynamicAlerts.push({
+            id: `expiry-safety-${emp.id}`,
+            title: `Corso Sicurezza in Scadenza - ${emp.name}`,
+            description: `Il corso sicurezza scade tra ${days} giorni (${emp.safety_course_expiry}).`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        }
+      }
+
+      // Visita Medica
+      if (emp.medical_visit_expiry) {
+        const days = getDaysLeft(emp.medical_visit_expiry);
+        if (isExpired(emp.medical_visit_expiry)) {
+          dynamicAlerts.push({
+            id: `expiry-medical-${emp.id}`,
+            title: `Visita Medica Scaduta - ${emp.name}`,
+            description: `La visita medica periodica è scaduta il ${emp.medical_visit_expiry}.`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        } else if (isExpiringSoon(emp.medical_visit_expiry)) {
+          dynamicAlerts.push({
+            id: `expiry-medical-${emp.id}`,
+            title: `Visita Medica in Scadenza - ${emp.name}`,
+            description: `La visita medica scade tra ${days} giorni (${emp.medical_visit_expiry}).`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        }
+      }
+
+      // Fine Periodo di Prova
+      if (emp.trial_period_end) {
+        const days = getDaysLeft(emp.trial_period_end);
+        if (isExpiringSoon(emp.trial_period_end)) {
+          dynamicAlerts.push({
+            id: `expiry-trial-${emp.id}`,
+            title: `Fine Periodo Prova - ${emp.name}`,
+            description: `Il periodo di prova scade tra ${days} giorni (${emp.trial_period_end}).`,
+            type: 'expiry',
+            createdAt: new Date().toISOString(),
+            isRead: false
+          });
+        }
+      }
+    });
+
+    // B. Controlla Richieste Ferie Pendenti
+    leaves.forEach(leave => {
+      if (leave.status === 'Pending') {
+        dynamicAlerts.push({
+          id: `pending-leave-${leave.id}`,
+          title: `Ferie in Attesa - ${leave.employee_name}`,
+          description: `Richiesta di ${leave.type} dal ${leave.start_date} al ${leave.end_date} in attesa.`,
+          type: 'leave',
+          createdAt: leave.created_at || new Date().toISOString(),
+          isRead: false
+        });
+      }
+    });
+
+    // C. Controlla Note Spese Pendenti
+    expenses.forEach(exp => {
+      if (exp.status === 'Pending') {
+        dynamicAlerts.push({
+          id: `pending-expense-${exp.id}`,
+          title: `Spesa da Approvare - ${exp.employee_name}`,
+          description: `Rimborso di ${exp.amount}€ da parte di ${exp.employee_name} per ${exp.merchant} in sospeso.`,
+          type: 'expense',
+          createdAt: exp.created_at || new Date().toISOString(),
+          isRead: false
+        });
+      }
+    });
+
+    const filteredAlerts = dynamicAlerts.filter(alert => !dismissedNotificationIds.includes(alert.id));
+    setNotifications(filteredAlerts);
+  }, [employees, leaves, expenses, dismissedNotificationIds, user]);
+
+  const handleMarkNotificationAsRead = (id) => {
+    const updated = [...dismissedNotificationIds, id];
+    setDismissedNotificationIds(updated);
+    localStorage.setItem('demo-dismissed-notifications', JSON.stringify(updated));
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    const currentIds = notifications.map(n => n.id);
+    const updated = [...new Set([...dismissedNotificationIds, ...currentIds])];
+    setDismissedNotificationIds(updated);
+    localStorage.setItem('demo-dismissed-notifications', JSON.stringify(updated));
+  };
+
+  const handleClearNotifications = () => {
+    handleMarkAllNotificationsAsRead();
+  };
+
+  // --- GESTIONE TURNI (FASE 8) ---
+  const handleSaveShift = async (shiftData) => {
+    if (isDemo) {
+      let updatedShifts;
+      if (shiftData.id) {
+        updatedShifts = shifts.map(s => s.id === shiftData.id ? { ...s, ...shiftData } : s);
+      } else {
+        const newShift = {
+          ...shiftData,
+          id: 'sh-' + Math.random().toString(36).substr(2, 9),
+          created_at: new Date().toISOString()
+        };
+        updatedShifts = [...shifts, newShift];
+      }
+      setShifts(updatedShifts);
+      localStorage.setItem('demo-shifts', JSON.stringify(updatedShifts));
+    } else {
+      try {
+        if (shiftData.id) {
+          const { error } = await supabase
+            .from('06app_CRM_HR_shifts')
+            .update(shiftData)
+            .eq('id', shiftData.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('06app_CRM_HR_shifts')
+            .insert([shiftData]);
+          if (error) throw error;
+        }
+        await loadSupabaseData();
+      } catch (err) {
+        console.error("Errore salvataggio turno Supabase:", err);
+        alert("Impossibile salvare il turno. Riprova.");
+      }
+    }
+  };
+
+  const handleDeleteShift = async (shiftId) => {
+    if (isDemo) {
+      const updatedShifts = shifts.filter(s => s.id !== shiftId);
+      setShifts(updatedShifts);
+      localStorage.setItem('demo-shifts', JSON.stringify(updatedShifts));
+    } else {
+      try {
+        const { error } = await supabase
+          .from('06app_CRM_HR_shifts')
+          .delete()
+          .eq('id', shiftId);
+        if (error) throw error;
+        await loadSupabaseData();
+      } catch (err) {
+        console.error("Errore eliminazione turno Supabase:", err);
+        alert("Impossibile eliminare il turno. Riprova.");
+      }
+    }
+  };
 
   // --- AZIONI: LOGIN / LOGOUT ---
   const handleLoginSuccess = (userData, demoStatus) => {
@@ -1482,6 +1770,10 @@ export default function App() {
           isDemo={isDemo} 
           onLogout={handleLogout} 
           onOpenJobModal={() => {}}
+          notifications={notifications}
+          onMarkAsRead={handleMarkNotificationAsRead}
+          onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+          onClearNotifications={handleClearNotifications}
         />
         <EmployeePortalTab
           user={user}
@@ -1490,6 +1782,7 @@ export default function App() {
           performances={performances}
           leaves={leaves}
           expenses={expenses}
+          shifts={shifts}
           onUpdateChecklistTask={handleUpdateChecklistTask}
           onAddLeave={handleAddLeave}
           onSaveExpense={handleSaveExpense}
@@ -1509,6 +1802,10 @@ export default function App() {
         isDemo={isDemo} 
         onLogout={handleLogout} 
         onOpenJobModal={() => { setSelectedJob(null); setNavTab('create-search'); }}
+        notifications={notifications}
+        onMarkAsRead={handleMarkNotificationAsRead}
+        onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+        onClearNotifications={handleClearNotifications}
       />
 
       {/* 4 Navigation tabs: Active searches, Archived, Templates, and Appointments */}
@@ -1528,6 +1825,7 @@ export default function App() {
           { id: 'employees', label: '👥 Dipendenti', icon: <Users size={15} /> },
           { id: 'absences', label: '🗓️ Presenze & Ferie', icon: <Calendar size={15} /> },
           { id: 'expenses', label: '💼 Note Spese', icon: <Receipt size={15} /> },
+          { id: 'shifts', label: '📅 Planner Turni', icon: <Clock size={15} /> },
           { id: 'analytics', label: '📊 HR Analytics', icon: <BarChart3 size={15} /> }
         ].map(tab => (
           <button
@@ -1754,6 +2052,14 @@ export default function App() {
                 onSaveExpense={handleSaveExpense}
                 onUpdateExpenseStatus={handleUpdateExpenseStatus}
                 onDeleteExpense={handleDeleteExpense}
+              />
+            ) : navTab === 'shifts' ? (
+              <ShiftPlannerTab
+                employees={employees}
+                shifts={shifts}
+                leaves={leaves}
+                onSaveShift={handleSaveShift}
+                onDeleteShift={handleDeleteShift}
               />
             ) : navTab === 'analytics' ? (
               <AnalyticsTab

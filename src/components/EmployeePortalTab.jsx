@@ -8,13 +8,14 @@ export default function EmployeePortalTab({
   performances = [],
   leaves = [],
   expenses = [],
+  shifts = [],
   onUpdateChecklistTask,
   onAddLeave,
   onSaveExpense,
   onDeleteLeave,
   onDeleteExpense
 }) {
-  const [activeSubTab, setActiveSubTab] = useState('fascicolo') // 'fascicolo' | 'checklist' | 'ferie' | 'spese'
+  const [activeSubTab, setActiveSubTab] = useState('fascicolo') // 'fascicolo' | 'checklist' | 'ferie' | 'spese' | 'turni'
 
   // Trova l'impiegato corrispondente all'utente loggato
   const currentEmp = employees.find(e => e.id === user.id || e.email === user.email) || employees[0]
@@ -237,7 +238,8 @@ export default function EmployeePortalTab({
             { id: 'fascicolo', label: '📄 Il mio Fascicolo', icon: <FileText size={16} /> },
             { id: 'checklist', label: `📋 La mia Checklist (${checklistPercent}%)`, icon: <CheckCircle size={16} /> },
             { id: 'ferie', label: '🗓️ Richiesta Ferie', icon: <Calendar size={16} /> },
-            { id: 'spese', label: '💼 Le mie Note Spese', icon: <Receipt size={16} /> }
+            { id: 'spese', label: '💼 Le mie Note Spese', icon: <Receipt size={16} /> },
+            { id: 'turni', label: '📅 I Miei Turni', icon: <Clock size={16} /> }
           ].map(tab => (
             <button
               key={tab.id}
@@ -836,6 +838,137 @@ export default function EmployeePortalTab({
               )}
             </div>
 
+          </div>
+        )}
+
+        {/* TAB 5: I MIEI TURNI */}
+        {activeSubTab === 'turni' && (
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 16px 0', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+              📅 Programmazione dei Miei Turni Lavorativi
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+              Di seguito viene mostrato l'elenco dei turni pianificati per te dall'ufficio HR per le prossime giornate.
+            </p>
+
+            {shifts.filter(s => s.employee_id === currentEmp.id).length === 0 ? (
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '30px' }}>
+                Nessun turno programmato al momento. Contatta l'amministratore HR per informazioni.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {shifts
+                  .filter(s => s.employee_id === currentEmp.id)
+                  .sort((a, b) => new Date(a.shift_date) - new Date(b.shift_date))
+                  .map(shift => {
+                    const shiftDate = new Date(shift.shift_date)
+                    const isToday = shift.shift_date === new Date().toISOString().split('T')[0]
+                    
+                    let bg = 'rgba(255, 255, 255, 0.01)'
+                    let color = 'var(--text-primary)'
+                    let iconBg = 'var(--primary-light)'
+                    let border = '1px solid var(--border-color)'
+
+                    if (shift.shift_type === 'Mattina') {
+                      bg = 'rgba(59, 130, 246, 0.03)'
+                      color = '#3b82f6'
+                      iconBg = 'rgba(59, 130, 246, 0.1)'
+                    } else if (shift.shift_type === 'Pomeriggio') {
+                      bg = 'var(--warning-light)'
+                      color = 'var(--warning)'
+                      iconBg = 'rgba(208, 128, 0, 0.1)'
+                    } else if (shift.shift_type === 'Notte') {
+                      bg = 'rgba(139, 92, 246, 0.03)'
+                      color = '#8b5cf6'
+                      iconBg = 'rgba(139, 92, 246, 0.1)'
+                    } else if (shift.shift_type === 'Custom') {
+                      bg = 'var(--success-light)'
+                      color = 'var(--success)'
+                      iconBg = 'rgba(15, 159, 110, 0.1)'
+                    }
+
+                    if (isToday) {
+                      border = '1.5px solid var(--primary)'
+                    }
+
+                    return (
+                      <div 
+                        key={shift.id} 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '14px 18px',
+                          borderRadius: 'var(--radius-md)',
+                          background: bg,
+                          border: border,
+                          boxShadow: 'var(--shadow-sm)',
+                          position: 'relative'
+                        }}
+                      >
+                        {isToday && (
+                          <span style={{
+                            position: 'absolute',
+                            top: '-8px',
+                            left: '12px',
+                            background: 'var(--primary)',
+                            color: 'white',
+                            fontSize: '0.58rem',
+                            fontWeight: 800,
+                            padding: '1px 6px',
+                            borderRadius: '2px',
+                            letterSpacing: '0.05em'
+                          }}>
+                            OGGI
+                          </span>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: 'var(--radius-md)',
+                            background: iconBg,
+                            color: color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.2rem',
+                            fontWeight: 800
+                          }}>
+                            {shift.shift_type.charAt(0)}
+                          </div>
+                          <div>
+                            <strong style={{ fontSize: '0.88rem', display: 'block', color: 'var(--text-primary)' }}>
+                              Turno di {shift.shift_type} ({shift.start_time} - {shift.end_time})
+                            </strong>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                              {shiftDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                          </div>
+                        </div>
+
+                        {shift.notes && (
+                          <div style={{ 
+                            fontSize: '0.75rem', 
+                            color: 'var(--text-secondary)', 
+                            background: 'rgba(0,0,0,0.03)', 
+                            padding: '6px 12px', 
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-color)',
+                            maxWidth: '300px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }} title={shift.notes}>
+                            📝 Note: {shift.notes}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+            )}
           </div>
         )}
 
