@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Calendar, Users, Briefcase, FileText, CheckCircle, Clock, Sparkles, Send, Receipt, ShieldAlert, Award } from 'lucide-react'
+import { Calendar, Users, Briefcase, FileText, CheckCircle, Clock, Sparkles, Send, Receipt, ShieldAlert, Award, Car } from 'lucide-react'
 
 export default function EmployeePortalTab({
   user,
@@ -9,6 +9,7 @@ export default function EmployeePortalTab({
   leaves = [],
   expenses = [],
   shifts = [],
+  vehicles = [],
   onUpdateChecklistTask,
   onAddLeave,
   onSaveExpense,
@@ -360,6 +361,64 @@ export default function EmployeePortalTab({
                 </div>
               </div>
             </div>
+
+            {/* Veicolo Aziendale Assegnato */}
+            {(() => {
+              const autoAsset = currentEmp.assets?.find(a => a.type === 'Auto Aziendale' || a.type === 'Auto');
+              const cardAsset = currentEmp.assets?.find(a => a.type === 'Carta Carburante');
+              
+              if (!autoAsset && !cardAsset) return null;
+              
+              const vehicleDetail = vehicles.find(v => v.plate === autoAsset?.serial || v.fuel_card_code === cardAsset?.serial);
+              
+              return (
+                <div className="glass-panel animate-fade-in" style={{ padding: '24px', background: 'linear-gradient(135deg, var(--primary-light) 0%, var(--bg-card) 100%)', border: '1px solid var(--border-color)' }}>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 14px 0', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Car size={18} style={{ color: 'var(--primary)' }} />
+                    <span>🚗 Veicolo & Carta Carburante Assegnati</span>
+                  </h2>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', fontSize: '0.82rem' }}>
+                    {autoAsset && (
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '2px' }}>Veicolo Assegnato</span>
+                        <strong style={{ fontSize: '0.9rem' }}>{autoAsset.model}</strong>
+                        <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>Targa: <code>{autoAsset.serial}</code></span>
+                      </div>
+                    )}
+                    
+                    {cardAsset && (
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '2px' }}>Carta Carburante in Dotazione</span>
+                        <strong style={{ fontSize: '0.9rem' }}>{cardAsset.model}</strong>
+                        <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>Codice: <code>{cardAsset.serial}</code></span>
+                      </div>
+                    )}
+
+                    {vehicleDetail && (
+                      <>
+                        <div>
+                          <span style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '2px' }}>Odomentrico Satellitare (Live)</span>
+                          <strong style={{ fontSize: '0.95rem', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span className="spinner" style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--success)' }} />
+                            {vehicleDetail.current_odometer?.toLocaleString('it-IT')} Km
+                          </strong>
+                          <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>Odomentrico Iniziale: {vehicleDetail.initial_odometer?.toLocaleString('it-IT')} Km</span>
+                        </div>
+                        
+                        <div>
+                          <span style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '2px' }}>Stato Telematica Satellitare</span>
+                          <span className="badge badge-success" style={{ gap: '4px', marginTop: '4px', fontSize: '0.62rem' }}>
+                            <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--success)' }} />
+                            Verizon Connect Active
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Eventuale Review o Feedback se presente */}
             {myPerformance && (

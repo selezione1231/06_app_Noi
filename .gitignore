@@ -26,3 +26,8 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Cartelle locali e file pesanti
+WP_2/
+*.mdf
+*.mp4

@@ -12,8 +12,9 @@ import ExpensesTab from './components/ExpensesTab'
 import EmployeePortalTab from './components/EmployeePortalTab'
 import AnalyticsTab from './components/AnalyticsTab'
 import ShiftPlannerTab from './components/ShiftPlannerTab'
+import MezziTab from './components/MezziTab'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
-import { Calendar, Users, Briefcase, Video, Trash2, ExternalLink, ShieldAlert, FolderArchive, FileCode, Receipt, BarChart3, Clock, CalendarDays } from 'lucide-react'
+import { Calendar, Users, Briefcase, Video, Trash2, ExternalLink, ShieldAlert, FolderArchive, FileCode, Receipt, BarChart3, Clock, CalendarDays, Car } from 'lucide-react'
 
 // --- SEED DATI DEMO DI FALLBACK ---
 const DEFAULT_JOBS = [
@@ -189,7 +190,9 @@ const DEFAULT_EMPLOYEES = [
     trial_period_end: '2024-07-15',
     assets: [
       { type: 'Notebook', model: 'MacBook Pro 16 M3', serial: 'C02F84HGQ05D', assignedAt: '2024-01-15' },
-      { type: 'Smartphone', model: 'iPhone 15 Pro', serial: 'DNPD403K0J2D', assignedAt: '2024-01-15' }
+      { type: 'Smartphone', model: 'iPhone 15 Pro', serial: 'DNPD403K0J2D', assignedAt: '2024-01-15' },
+      { type: 'Carta Carburante', model: 'Carta Eni Routeex', serial: 'CARD-99123', assignedAt: '2024-01-15' },
+      { type: 'Auto Aziendale', model: 'Fiat Doblò 1.6 MultiJet', serial: 'FL-098-HR', assignedAt: '2024-01-15' }
     ],
     document_id_expiry: '2029-05-20',
     safety_course_expiry: '2027-02-10',
@@ -207,7 +210,9 @@ const DEFAULT_EMPLOYEES = [
     ral: 35000,
     trial_period_end: '2024-12-01',
     assets: [
-      { type: 'Notebook', model: 'Dell Latitude 5440', serial: 'J94KSD2', assignedAt: '2024-06-01' }
+      { type: 'Notebook', model: 'Dell Latitude 5440', serial: 'J94KSD2', assignedAt: '2024-06-01' },
+      { type: 'Carta Carburante', model: 'Carta IP Plus', serial: 'CARD-99124', assignedAt: '2024-06-01' },
+      { type: 'Auto Aziendale', model: 'Ford Transit Custom 2.0 EcoBlue', serial: 'AB-123-CD', assignedAt: '2024-06-01' }
     ],
     document_id_expiry: '2028-11-12',
     safety_course_expiry: '2026-05-10',
@@ -226,7 +231,9 @@ const DEFAULT_EMPLOYEES = [
     trial_period_end: null,
     assets: [
       { type: 'Notebook', model: 'MacBook Air 15 M2', serial: 'C02HG892Q05E', assignedAt: '2023-03-10' },
-      { type: 'Badge', model: 'Accesso Ufficio A', serial: 'BDG-0021', assignedAt: '2023-03-10' }
+      { type: 'Badge', model: 'Accesso Ufficio A', serial: 'BDG-0021', assignedAt: '2023-03-10' },
+      { type: 'Carta Carburante', model: 'Carta Q8 Easy', serial: 'CARD-99126', assignedAt: '2023-03-10' },
+      { type: 'Auto Aziendale', model: 'Iveco Daily 35C16', serial: 'ZA-776-XX', assignedAt: '2023-03-10' }
     ],
     document_id_expiry: '2026-06-15',
     safety_course_expiry: '2028-09-22',
@@ -262,13 +269,75 @@ const DEFAULT_EMPLOYEES = [
     ral: 26000,
     trial_period_end: '2026-11-02',
     assets: [
-      { type: 'Notebook', model: 'MacBook Air 13 M3', serial: 'C02G293KQ01E', assignedAt: '2026-05-02' }
+      { type: 'Notebook', model: 'MacBook Air 13 M3', serial: 'C02G293KQ01E', assignedAt: '2026-05-02' },
+      { type: 'Carta Carburante', model: 'Carta Esso Card', serial: 'CARD-99125', assignedAt: '2026-05-02' },
+      { type: 'Auto Aziendale', model: 'Peugeot Partner 1.2 PureTech', serial: 'XY-889-ZZ', assignedAt: '2026-05-02' }
     ],
     document_id_expiry: '2031-10-05',
     safety_course_expiry: '2026-05-28',
     medical_visit_expiry: '2026-06-02'
   }
 ]
+
+const DEFAULT_VEHICLES = [
+  {
+    id: "v-01",
+    plate: "FL-098-HR",
+    make_model: "Fiat Doblò 1.6 MultiJet",
+    year: 2022,
+    fuel_type: "Diesel",
+    initial_odometer: 124500,
+    current_odometer: 126800,
+    fuel_card_code: "CARD-99123",
+    assigned_employee_id: "demo-emp-1",
+    api_vehicle_id: "RV-DOBLO-01",
+    consumption_limit: 6.0,
+    notes: "Veicolo commerciale per consegne tecniche"
+  },
+  {
+    id: "v-02",
+    plate: "AB-123-CD",
+    make_model: "Ford Transit Custom 2.0 EcoBlue",
+    year: 2023,
+    fuel_type: "Diesel",
+    initial_odometer: 89200,
+    current_odometer: 91450,
+    fuel_card_code: "CARD-99124",
+    assigned_employee_id: "demo-emp-2",
+    api_vehicle_id: "RV-TRANSIT-02",
+    consumption_limit: 6.5,
+    notes: "Utilizzato dal team commerciale per visite clienti"
+  },
+  {
+    id: "v-03",
+    plate: "XY-889-ZZ",
+    make_model: "Peugeot Partner 1.2 PureTech",
+    year: 2021,
+    fuel_type: "Benzina",
+    initial_odometer: 43100,
+    current_odometer: 44950,
+    fuel_card_code: "CARD-99125",
+    assigned_employee_id: "demo-emp-5",
+    api_vehicle_id: "RV-PARTNER-03",
+    consumption_limit: 7.0,
+    notes: "Veicolo di supporto tecnico Junior"
+  },
+  {
+    id: "v-04",
+    plate: "ZA-776-XX",
+    make_model: "Iveco Daily 35C16",
+    year: 2020,
+    fuel_type: "Diesel",
+    initial_odometer: 156000,
+    current_odometer: 159100,
+    fuel_card_code: "CARD-99126",
+    assigned_employee_id: "demo-emp-3",
+    api_vehicle_id: "RV-DAILY-04",
+    consumption_limit: 9.5,
+    notes: "Furgone pesante assegnato alle spedizioni"
+  }
+]
+
 
 const DEFAULT_LEAVES = [
   {
@@ -466,6 +535,10 @@ export default function App() {
   const [performances, setPerformances] = useState([])
   const [expenses, setExpenses] = useState([])
   const [shifts, setShifts] = useState([])
+  const [vehicles, setVehicles] = useState([])
+  const [fuelTransactions, setFuelTransactions] = useState([])
+  const [verizonConfig, setVerizonConfig] = useState({ username: '', password: '', token: '' })
+  const [currentRole, setCurrentRole] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [dismissedNotificationIds, setDismissedNotificationIds] = useState(() => {
     try {
@@ -524,6 +597,40 @@ export default function App() {
     }
   }, [])
 
+  // Sincronizza il ruolo corrente quando l'utente si logga
+  useEffect(() => {
+    if (user) {
+      if (!currentRole) {
+        setCurrentRole(user.role || (['recruiter.demo@azienda.it', 'f.locatelli@todos.it'].includes(user.email) ? 'admin' : 'employee'));
+      }
+    } else {
+      setCurrentRole(null);
+    }
+  }, [user]);
+
+  // Controlla che la navTab sia compatibile col ruolo attivo corrente
+  useEffect(() => {
+    if (currentRole) {
+      const availableTabs = [
+        { id: 'active', roles: ['admin', 'hr'] },
+        { id: 'archived', roles: ['admin', 'hr'] },
+        { id: 'templates', roles: ['admin', 'hr'] },
+        { id: 'appointments', roles: ['admin', 'hr'] },
+        { id: 'employees', roles: ['admin', 'hr', 'servizi_generali', 'pm'] },
+        { id: 'absences', roles: ['admin', 'hr', 'pm'] },
+        { id: 'expenses', roles: ['admin', 'hr', 'pm'] },
+        { id: 'shifts', roles: ['admin', 'hr', 'pm'] },
+        { id: 'analytics', roles: ['admin', 'hr', 'pm'] },
+        { id: 'mezzi', roles: ['admin', 'hr', 'servizi_generali', 'pm'] }
+      ].filter(t => t.roles.includes(currentRole));
+
+      const isTabAvailable = availableTabs.some(t => t.id === navTab);
+      if (!isTabAvailable && availableTabs.length > 0) {
+        setNavTab(availableTabs[0].id);
+      }
+    }
+  }, [currentRole, navTab]);
+
   // 2. Caricamento Dati in base a Modalità Demo vs Supabase
   useEffect(() => {
     if (!user) return
@@ -548,8 +655,11 @@ export default function App() {
     const localPerformances = localStorage.getItem('demo-performances')
     const localExpenses = localStorage.getItem('demo-expenses')
     const localShifts = localStorage.getItem('demo-shifts')
+    const localVehicles = localStorage.getItem('demo-vehicles')
+    const localFuelTransactions = localStorage.getItem('demo-fuel-transactions')
+    const localVerizonConfig = localStorage.getItem('demo-verizon-config')
 
-    if (localJobs && localCandidates && localNotes && localAppointments && localTemplates && localEmployees && localLeaves && localChecklists && localPerformances && localExpenses && localShifts) {
+    if (localJobs && localCandidates && localNotes && localAppointments && localTemplates && localEmployees && localLeaves && localChecklists && localPerformances && localExpenses && localShifts && localVehicles) {
       setJobs(JSON.parse(localJobs))
       setCandidates(JSON.parse(localCandidates))
       setNotes(JSON.parse(localNotes))
@@ -561,6 +671,9 @@ export default function App() {
       setPerformances(JSON.parse(localPerformances))
       setExpenses(JSON.parse(localExpenses))
       setShifts(JSON.parse(localShifts))
+      setVehicles(JSON.parse(localVehicles))
+      setFuelTransactions(localFuelTransactions ? JSON.parse(localFuelTransactions) : [])
+      setVerizonConfig(localVerizonConfig ? JSON.parse(localVerizonConfig) : { username: '', password: '', token: '' })
     } else {
       const initialShifts = generateDemoShifts(DEFAULT_EMPLOYEES)
 
@@ -575,6 +688,9 @@ export default function App() {
       localStorage.setItem('demo-performances', JSON.stringify(DEFAULT_PERFORMANCES))
       localStorage.setItem('demo-expenses', JSON.stringify(DEFAULT_EXPENSES))
       localStorage.setItem('demo-shifts', JSON.stringify(initialShifts))
+      localStorage.setItem('demo-vehicles', JSON.stringify(DEFAULT_VEHICLES))
+      localStorage.setItem('demo-fuel-transactions', JSON.stringify([]))
+      localStorage.setItem('demo-verizon-config', JSON.stringify({ username: '', password: '', token: '' }))
 
       setJobs(DEFAULT_JOBS)
       setCandidates(DEFAULT_CANDIDATES)
@@ -587,6 +703,9 @@ export default function App() {
       setPerformances(DEFAULT_PERFORMANCES)
       setExpenses(DEFAULT_EXPENSES)
       setShifts(initialShifts)
+      setVehicles(DEFAULT_VEHICLES)
+      setFuelTransactions([])
+      setVerizonConfig({ username: '', password: '', token: '' })
     }
   }
 
@@ -702,6 +821,30 @@ export default function App() {
       } catch (shiftErr) {
         console.warn("Tabella '06app_CRM_HR_shifts' non trovata in Supabase. Esegui la migrazione SQL.", shiftErr)
         setShifts([])
+      }
+
+      // Carica Veicoli con gestione errore soft
+      try {
+        const { data: dbVehicles, error: errVehicles } = await supabase
+          .from('06app_CRM_HR_vehicles')
+          .select('*')
+        if (errVehicles) throw errVehicles
+        setVehicles(dbVehicles || [])
+      } catch (vehErr) {
+        console.warn("Tabella '06app_CRM_HR_vehicles' non trovata in Supabase. Esegui la migrazione SQL.", vehErr)
+        setVehicles([])
+      }
+
+      // Carica Transazioni Carburante con gestione errore soft
+      try {
+        const { data: dbTx, error: errTx } = await supabase
+          .from('06app_CRM_HR_fuel_transactions')
+          .select('*')
+        if (errTx) throw errTx
+        setFuelTransactions(dbTx || [])
+      } catch (txErr) {
+        console.warn("Tabella '06app_CRM_HR_fuel_transactions' non trovata in Supabase. Esegui la migrazione SQL.", txErr)
+        setFuelTransactions([])
       }
     } catch (e) {
       console.error('Errore durante il caricamento da Supabase:', e)
@@ -1828,6 +1971,107 @@ export default function App() {
     }
   }
 
+  // --- GESTIONE PARCO MEZZI & CONSUMI ---
+  const handleSaveVehicle = async (vehicleData) => {
+    if (isDemo) {
+      const existingIdx = vehicles.findIndex(v => v.id === vehicleData.id || v.plate === vehicleData.plate);
+      let updatedVehicles;
+      if (existingIdx > -1) {
+        updatedVehicles = [...vehicles];
+        updatedVehicles[existingIdx] = { ...updatedVehicles[existingIdx], ...vehicleData };
+      } else {
+        updatedVehicles = [vehicleData, ...vehicles];
+      }
+      setVehicles(updatedVehicles);
+      localStorage.setItem('demo-vehicles', JSON.stringify(updatedVehicles));
+      
+      // Allinea le carte carburante e auto nei beni del dipendente
+      if (vehicleData.assigned_employee_id) {
+        const emp = employees.find(e => e.id === vehicleData.assigned_employee_id);
+        if (emp) {
+          const newAssets = [...(emp.assets || [])];
+          const cleanedAssets = newAssets.filter(a => a.type !== 'Auto Aziendale' && a.type !== 'Carta Carburante');
+          if (vehicleData.fuel_card_code) {
+            cleanedAssets.push({
+              type: 'Carta Carburante',
+              model: 'Carta Rifornimento Abbinata',
+              serial: vehicleData.fuel_card_code,
+              assignedAt: new Date().toISOString().split('T')[0]
+            });
+          }
+          cleanedAssets.push({
+            type: 'Auto Aziendale',
+            model: vehicleData.make_model,
+            serial: vehicleData.plate,
+            assignedAt: new Date().toISOString().split('T')[0]
+          });
+          
+          const updatedEmployees = employees.map(e => e.id === emp.id ? { ...e, assets: cleanedAssets } : e);
+          setEmployees(updatedEmployees);
+          localStorage.setItem('demo-employees', JSON.stringify(updatedEmployees));
+        }
+      }
+    } else {
+      try {
+        const { error } = await supabase
+          .from('06app_CRM_HR_vehicles')
+          .upsert([vehicleData])
+        if (error) throw error
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nel salvataggio del veicolo su Supabase: " + e.message)
+      }
+    }
+  };
+
+  const handleDeleteVehicle = async (id) => {
+    if (isDemo) {
+      const updatedVehicles = vehicles.filter(v => v.id !== id);
+      setVehicles(updatedVehicles);
+      localStorage.setItem('demo-vehicles', JSON.stringify(updatedVehicles));
+    } else {
+      try {
+        const { error } = await supabase
+          .from('06app_CRM_HR_vehicles')
+          .delete()
+          .eq('id', id)
+        if (error) throw error
+        await loadSupabaseData()
+      } catch (e) {
+        alert("Errore nella cancellazione del veicolo su Supabase: " + e.message)
+      }
+    }
+  };
+
+  const handleSaveVerizonConfig = (config) => {
+    setVerizonConfig(config);
+    if (isDemo) {
+      localStorage.setItem('demo-verizon-config', JSON.stringify(config));
+    }
+  };
+
+  const handleImportFuelTransactions = async (newTransactions) => {
+    if (isDemo) {
+      const updated = [...newTransactions, ...fuelTransactions];
+      // remove duplicates
+      const unique = updated.filter((v, i, a) => 
+        a.findIndex(t => t.transaction_date === v.transaction_date && t.fuel_card_code === v.fuel_card_code && t.liters === v.liters) === i
+      );
+      setFuelTransactions(unique);
+      localStorage.setItem('demo-fuel-transactions', JSON.stringify(unique));
+    } else {
+      try {
+        const { error } = await supabase
+          .from('06app_CRM_HR_fuel_transactions')
+          .insert(newTransactions);
+        if (error) throw error;
+        await loadSupabaseData();
+      } catch (e) {
+        alert("Errore nel salvataggio delle transazioni su Supabase: " + e.message);
+      }
+    }
+  };
+
   // Helpers
   const formatDateTime = (dateStr) => {
     try {
@@ -1874,7 +2118,7 @@ export default function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
 
-  if (user.role === 'employee') {
+  if (currentRole === 'employee') {
     return (
       <div className="app-container">
         {/* Header / Navbar */}
@@ -1888,6 +2132,8 @@ export default function App() {
           onMarkAllAsRead={handleMarkAllNotificationsAsRead}
           onClearNotifications={handleClearNotifications}
           onOpenManual={() => setShowManualModal(true)}
+          currentRole={currentRole}
+          onRoleChange={setCurrentRole}
         />
         <EmployeePortalTab
           user={user}
@@ -1897,6 +2143,7 @@ export default function App() {
           leaves={leaves}
           expenses={expenses}
           shifts={shifts}
+          vehicles={vehicles}
           onUpdateChecklistTask={handleUpdateChecklistTask}
           onAddLeave={handleAddLeave}
           onSaveExpense={handleSaveExpense}
@@ -1923,6 +2170,8 @@ export default function App() {
         onOpenManual={() => setShowManualModal(true)}
         showSeedButton={employees.length === 0}
         onSeedDatabase={handleSeedSupabaseData}
+        currentRole={currentRole}
+        onRoleChange={setCurrentRole}
       />
 
       {/* 4 Navigation tabs: Active searches, Archived, Templates, and Appointments */}
@@ -1935,16 +2184,17 @@ export default function App() {
         overflowX: 'auto'
       }}>
         {[
-          { id: 'active', label: '📋 Ricerche Attive', icon: <Briefcase size={15} /> },
-          { id: 'archived', label: '🗄️ Archivio Ricerche', icon: <FolderArchive size={15} /> },
-          { id: 'templates', label: '📂 Anagrafica Templates', icon: <FileCode size={15} /> },
-          { id: 'appointments', label: '📅 Appuntamenti', icon: <Calendar size={15} /> },
-          { id: 'employees', label: '👥 Dipendenti', icon: <Users size={15} /> },
-          { id: 'absences', label: '🗓️ Presenze & Ferie', icon: <Calendar size={15} /> },
-          { id: 'expenses', label: '💼 Note Spese', icon: <Receipt size={15} /> },
-          { id: 'shifts', label: '📅 Planner Turni', icon: <Clock size={15} /> },
-          { id: 'analytics', label: '📊 HR Analytics', icon: <BarChart3 size={15} /> }
-        ].map(tab => (
+          { id: 'active', label: '📋 Ricerche Attive', icon: <Briefcase size={15} />, roles: ['admin', 'hr'] },
+          { id: 'archived', label: '🗄️ Archivio Ricerche', icon: <FolderArchive size={15} />, roles: ['admin', 'hr'] },
+          { id: 'templates', label: '📂 Anagrafica Templates', icon: <FileCode size={15} />, roles: ['admin', 'hr'] },
+          { id: 'appointments', label: '📅 Appuntamenti', icon: <Calendar size={15} />, roles: ['admin', 'hr'] },
+          { id: 'employees', label: '👥 Dipendenti', icon: <Users size={15} />, roles: ['admin', 'hr', 'servizi_generali', 'pm'] },
+          { id: 'absences', label: '🗓️ Presenze & Ferie', icon: <Calendar size={15} />, roles: ['admin', 'hr', 'pm'] },
+          { id: 'expenses', label: '💼 Note Spese', icon: <Receipt size={15} />, roles: ['admin', 'hr', 'pm'] },
+          { id: 'shifts', label: '📅 Planner Turni', icon: <Clock size={15} />, roles: ['admin', 'hr', 'pm'] },
+          { id: 'analytics', label: '📊 HR Analytics', icon: <BarChart3 size={15} />, roles: ['admin', 'hr', 'pm'] },
+          { id: 'mezzi', label: '🚗 Mezzi', icon: <Car size={15} />, roles: ['admin', 'hr', 'servizi_generali', 'pm'] }
+        ].filter(tab => tab.roles.includes(currentRole || 'admin')).map(tab => (
           <button
             key={tab.id}
             onClick={() => { setNavTab(tab.id); setSelectedJob(null); }}
@@ -2153,6 +2403,7 @@ export default function App() {
                 onSavePerformanceReview={handleSavePerformanceReview}
                 onUpdateOkrProgress={handleUpdateOkrProgress}
                 onAddOkrObjective={handleAddOkrObjective}
+                currentRole={currentRole}
               />
             ) : navTab === 'absences' ? (
               <AbsencesTab
@@ -2185,6 +2436,17 @@ export default function App() {
                 employees={employees}
                 leaves={leaves}
                 expenses={expenses}
+              />
+            ) : navTab === 'mezzi' ? (
+              <MezziTab
+                employees={employees}
+                vehicles={vehicles}
+                fuelTransactions={fuelTransactions}
+                verizonConfig={verizonConfig}
+                onSaveVehicle={handleSaveVehicle}
+                onDeleteVehicle={handleDeleteVehicle}
+                onSaveVerizonConfig={handleSaveVerizonConfig}
+                onImportFuelTransactions={handleImportFuelTransactions}
               />
             ) : (
               /* JOBS DASHBOARD VIEWS: ACTIVE, ARCHIVED OR TEMPLATES */
@@ -2524,6 +2786,40 @@ CREATE TABLE IF NOT EXISTS "06app_CRM_HR_shifts" (
   end_time TIME NOT NULL,
   shift_type TEXT NOT NULL,
   notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 12. TABELLA VEICOLI (06app_CRM_HR_vehicles)
+CREATE TABLE IF NOT EXISTS "06app_CRM_HR_vehicles" (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  plate TEXT NOT NULL UNIQUE,
+  make_model TEXT NOT NULL,
+  year INTEGER,
+  fuel_type TEXT NOT NULL,
+  initial_odometer NUMERIC NOT NULL DEFAULT 0,
+  current_odometer NUMERIC NOT NULL DEFAULT 0,
+  fuel_card_code TEXT UNIQUE,
+  assigned_employee_id UUID REFERENCES "06app_CRM_HR_employees"(id) ON DELETE SET NULL,
+  api_vehicle_id TEXT,
+  consumption_limit NUMERIC DEFAULT 6.5,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. TABELLA TRANSAZIONI CARBURANTE (06app_CRM_HR_fuel_transactions)
+CREATE TABLE IF NOT EXISTS "06app_CRM_HR_fuel_transactions" (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  transaction_date DATE NOT NULL,
+  fuel_card_code TEXT NOT NULL,
+  station_name TEXT,
+  plate TEXT,
+  liters NUMERIC NOT NULL,
+  amount NUMERIC NOT NULL,
+  matched_employee_id UUID REFERENCES "06app_CRM_HR_employees"(id) ON DELETE SET NULL,
+  matched_vehicle_id UUID REFERENCES "06app_CRM_HR_vehicles"(id) ON DELETE SET NULL,
+  satellite_km NUMERIC,
+  effective_consumption NUMERIC,
+  anomaly_status TEXT DEFAULT 'OK',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );`}
                   />

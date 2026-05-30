@@ -307,3 +307,117 @@ function mockMatchCandidateWithJob(candidateInfo, jobDescription) {
     }, 1200) // Simula la latenza dell'AI
   })
 }
+
+/**
+ * Estrae l'elenco dei rifornimenti da una fattura di carburante tramite Gemini AI.
+ */
+export const extractFuelTransactions = async (invoiceText) => {
+  if (!isGeminiConfigured) {
+    console.log("Gemini API non configurata per la fattura carburante. Utilizzo simulatore.");
+    return mockExtractFuelTransactions(invoiceText);
+  }
+
+  try {
+    const prompt = `
+Analizza il seguente testo estratto da una fattura di carburante (formato PDF o foglio di calcolo Excel) ed estrai l'elenco analitico dei rifornimenti stradali effettuati. Struttura i dati ESCLUSIVAMENTE nel formato JSON descritto di seguito. Non aggiungere commenti, spiegazioni o testo prima o dopo il JSON.
+
+Formato JSON richiesto:
+[
+  {
+    "transaction_date": "YYYY-MM-DD",
+    "fuel_card_code": "Codice della carta carburante (es. CARD-99123 o un numero identificativo della carta)",
+    "station_name": "Nome ed ubicazione della stazione di servizio (es. Eni Milano, IP Roma)",
+    "plate": "Targa del veicolo associato (se specificata nel testo, altrimenti null)",
+    "liters": 45.2,
+    "amount": 78.50
+  }
+]
+
+Testo della fattura carburante:
+---
+${invoiceText}
+---
+`
+
+    const textResponse = await generateContentWithFallback(prompt, "application/json");
+    return parseGeminiJson(textResponse);
+  } catch (error) {
+    console.error("Errore durante l'estrazione Gemini della fattura carburante:", error);
+    return mockExtractFuelTransactions(invoiceText);
+  }
+};
+
+function mockExtractFuelTransactions(invoiceText) {
+  // Genera un set di transazioni fittizie ma realistiche, associate alle carte carburante dei nostri dipendenti
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+          transaction_date: "2026-05-10",
+          fuel_card_code: "CARD-99123",
+          station_name: "Eni Station Milano",
+          plate: "FL-098-HR",
+          liters: 50.0,
+          amount: 92.50
+        },
+        {
+          transaction_date: "2026-05-20",
+          fuel_card_code: "CARD-99123",
+          station_name: "IP Torri di Quartesolo",
+          plate: "FL-098-HR",
+          liters: 48.5,
+          amount: 89.78
+        },
+        {
+          transaction_date: "2026-05-05",
+          fuel_card_code: "CARD-99124",
+          station_name: "Q8 Roma Nord",
+          plate: "AB-123-CD",
+          liters: 60.0,
+          amount: 111.00
+        },
+        {
+          transaction_date: "2026-05-18",
+          fuel_card_code: "CARD-99124",
+          station_name: "Tamoil Firenze Sud",
+          plate: "AB-123-CD",
+          liters: 62.0,
+          amount: 114.70
+        },
+        {
+          transaction_date: "2026-05-12",
+          fuel_card_code: "CARD-99125",
+          station_name: "Eni Bologna Est",
+          plate: "XY-889-ZZ",
+          liters: 65.0,
+          amount: 121.50
+        },
+        {
+          transaction_date: "2026-05-24",
+          fuel_card_code: "CARD-99125",
+          station_name: "Esso Modena",
+          plate: "XY-889-ZZ",
+          liters: 64.5,
+          amount: 120.60
+        },
+        {
+          transaction_date: "2026-05-08",
+          fuel_card_code: "CARD-99126",
+          station_name: "Q8 Napoli Centro",
+          plate: "ZA-776-XX",
+          liters: 145.0,
+          amount: 271.15
+        },
+        {
+          transaction_date: "2026-05-22",
+          fuel_card_code: "CARD-99126",
+          station_name: "IP Salerno",
+          plate: "ZA-776-XX",
+          liters: 150.0,
+          amount: 280.50
+        }
+      ]);
+    }, 1500);
+  });
+}
+

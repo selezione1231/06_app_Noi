@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function EmployeesTab({ 
   employees, 
@@ -12,11 +12,25 @@ export default function EmployeesTab({
   onAddChecklistTask,
   onSavePerformanceReview,
   onUpdateOkrProgress,
-  onAddOkrObjective
+  onAddOkrObjective,
+  currentRole
 }) {
   const [selectedEmpId, setSelectedEmpId] = useState(employees[0]?.id || null)
   const [showOrgChart, setShowOrgChart] = useState(false)
-  const [activeSubTab, setActiveSubTab] = useState('contract') // 'contract', 'assets', 'deadlines', 'checklist', 'performance'
+  const [activeSubTab, setActiveSubTab] = useState(() => {
+    if (currentRole === 'servizi_generali') return 'assets';
+    if (currentRole === 'pm') return 'assets';
+    return 'contract';
+  })
+  
+  useEffect(() => {
+    if (currentRole === 'servizi_generali') {
+      setActiveSubTab('assets');
+    } else if (currentRole === 'pm' && activeSubTab === 'contract') {
+      setActiveSubTab('assets');
+    }
+  }, [currentRole]);
+
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEmp, setEditingEmp] = useState(null)
   
@@ -297,12 +311,20 @@ export default function EmployeesTab({
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Gestione contratti, beni aziendali consegnati, checklists e scadenze legali del personale di Todos.it</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={() => setShowOrgChart(!showOrgChart)}>
-            <span>{showOrgChart ? '📄 Elenco & Fascicoli' : '🏢 Vedi Organigramma'}</span>
-          </button>
-          <button className="btn btn-primary" onClick={openAddForm}>
-            <span>+ Aggiungi Dipendente</span>
-          </button>
+          {['admin', 'hr'].includes(currentRole || 'admin') ? (
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowOrgChart(!showOrgChart)}>
+                <span>{showOrgChart ? '📄 Elenco & Fascicoli' : '🏢 Vedi Organigramma'}</span>
+              </button>
+              <button className="btn btn-primary" onClick={openAddForm}>
+                <span>+ Aggiungi Dipendente</span>
+              </button>
+            </>
+          ) : (
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', background: 'rgba(0,0,0,0.02)', padding: '6px 12px', borderRadius: 'var(--radius-sm)' }}>
+              🔒 Visualizzazione Limitata Anagrafica
+            </span>
+          )}
         </div>
       </div>
 
@@ -500,20 +522,24 @@ export default function EmployeesTab({
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: '0.75rem' }} onClick={() => openEditForm(selectedEmp)}>Modifica</button>
-                  <button className="btn btn-danger" style={{ padding: '6px 10px', fontSize: '0.75rem' }} onClick={() => handleDelete(selectedEmp.id)}>Elimina</button>
+                  {['admin', 'hr'].includes(currentRole || 'admin') && (
+                    <>
+                      <button className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: '0.75rem' }} onClick={() => openEditForm(selectedEmp)}>Modifica</button>
+                      <button className="btn btn-danger" style={{ padding: '6px 10px', fontSize: '0.75rem' }} onClick={() => handleDelete(selectedEmp.id)}>Elimina</button>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Sub Navigation del Fascicolo */}
               <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', gap: '16px', overflowX: 'auto' }}>
                 {[
-                  { id: 'contract', label: '📄 Dati Contrattuali' },
-                  { id: 'assets', label: `💻 Asset & Dotazione (${selectedEmp.assets?.length || 0})` },
-                  { id: 'deadlines', label: '🚨 Adempimenti & Scadenze' },
-                  { id: 'checklist', label: `📋 Checklist (${checklistPercent}%)` },
-                  { id: 'performance', label: '📈 Valutazioni & OKR' }
-                ].map(subTab => (
+                  { id: 'contract', label: '📄 Dati Contrattuali', roles: ['admin', 'hr'] },
+                  { id: 'assets', label: `💻 Asset & Dotazione (${selectedEmp.assets?.length || 0})`, roles: ['admin', 'hr', 'servizi_generali', 'pm'] },
+                  { id: 'deadlines', label: '🚨 Adempimenti & Scadenze', roles: ['admin', 'hr'] },
+                  { id: 'checklist', label: `📋 Checklist (${checklistPercent}%)`, roles: ['admin', 'hr', 'pm'] },
+                  { id: 'performance', label: '📈 Valutazioni & OKR', roles: ['admin', 'hr', 'pm'] }
+                ].filter(sub => sub.roles.includes(currentRole || 'admin')).map(subTab => (
                   <button
                     key={subTab.id}
                     onClick={() => setActiveSubTab(subTab.id)}
@@ -589,7 +615,9 @@ export default function EmployeesTab({
                               <td><code>{asset.serial}</code></td>
                               <td>{new Date(asset.assignedAt).toLocaleDateString('it-IT')}</td>
                               <td>
-                                <button className="btn btn-danger" style={{ padding: '2px 6px', fontSize: '0.65rem' }} onClick={() => handleRemoveAsset(idx)}>Rimuovi</button>
+                                {['admin', 'hr', 'servizi_generali'].includes(currentRole || 'admin') && (
+                                  <button className="btn btn-danger" style={{ padding: '2px 6px', fontSize: '0.65rem' }} onClick={() => handleRemoveAsset(idx)}>Rimuovi</button>
+                                )}
                               </td>
                             </tr>
                           ))
@@ -598,37 +626,40 @@ export default function EmployeesTab({
                     </table>
 
                     {/* Aggiungi Asset Form */}
-                    <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-                      <h5 style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: '8px' }}>Assegna Nuovo Dispositivo / Bene</h5>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <select
-                          value={newAssetType}
-                          onChange={(e) => setNewAssetType(e.target.value)}
-                          style={{ padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
-                        >
-                          <option value="Notebook">Notebook</option>
-                          <option value="Smartphone">Smartphone</option>
-                          <option value="Auto">Auto Aziendale</option>
-                          <option value="Badge">Badge Ufficio</option>
-                          <option value="Altro">Altro / Licenza</option>
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="Modello (es. MacBook Pro M3)"
-                          value={newAssetModel}
-                          onChange={(e) => setNewAssetModel(e.target.value)}
-                          style={{ flexGrow: 1, padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Seriale / Targa"
-                          value={newAssetSerial}
-                          onChange={(e) => setNewAssetSerial(e.target.value)}
-                          style={{ width: '120px', padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
-                        />
-                        <button className="btn btn-primary" style={{ padding: '6px 10px' }} onClick={handleAddAsset}>Assegna</button>
+                    {['admin', 'hr', 'servizi_generali'].includes(currentRole || 'admin') && (
+                      <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                        <h5 style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: '8px' }}>Assegna Nuovo Dispositivo / Bene</h5>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <select
+                            value={newAssetType}
+                            onChange={(e) => setNewAssetType(e.target.value)}
+                            style={{ padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                          >
+                            <option value="Notebook">Notebook</option>
+                            <option value="Smartphone">Smartphone</option>
+                            <option value="Auto">Auto Aziendale</option>
+                            <option value="Carta Carburante">Carta Carburante</option>
+                            <option value="Badge">Badge Ufficio</option>
+                            <option value="Altro">Altro / Licenza</option>
+                          </select>
+                          <input
+                            type="text"
+                            placeholder="Modello (es. MacBook Pro M3)"
+                            value={newAssetModel}
+                            onChange={(e) => setNewAssetModel(e.target.value)}
+                            style={{ flexGrow: 1, padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Seriale / Targa / Numero"
+                            value={newAssetSerial}
+                            onChange={(e) => setNewAssetSerial(e.target.value)}
+                            style={{ width: '150px', padding: '6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                          />
+                          <button className="btn btn-primary" style={{ padding: '6px 10px' }} onClick={handleAddAsset}>Assegna</button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
