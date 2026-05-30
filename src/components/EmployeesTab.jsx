@@ -15,6 +15,7 @@ export default function EmployeesTab({
   onAddOkrObjective
 }) {
   const [selectedEmpId, setSelectedEmpId] = useState(employees[0]?.id || null)
+  const [showOrgChart, setShowOrgChart] = useState(false)
   const [activeSubTab, setActiveSubTab] = useState('contract') // 'contract', 'assets', 'deadlines', 'checklist', 'performance'
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEmp, setEditingEmp] = useState(null)
@@ -295,12 +296,152 @@ export default function EmployeesTab({
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem' }}>👥 Anagrafica & Fascicolo Dipendenti</h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Gestione contratti, beni aziendali consegnati, checklists e scadenze legali del personale di Todos.it</p>
         </div>
-        <button className="btn btn-primary" onClick={openAddForm}>
-          <span>+ Aggiungi Dipendente</span>
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-secondary" onClick={() => setShowOrgChart(!showOrgChart)}>
+            <span>{showOrgChart ? '📄 Elenco & Fascicoli' : '🏢 Vedi Organigramma'}</span>
+          </button>
+          <button className="btn btn-primary" onClick={openAddForm}>
+            <span>+ Aggiungi Dipendente</span>
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-3" style={{ gap: '16px', alignItems: 'stretch', flexGrow: 1 }}>
+      {showOrgChart ? (
+        <div className="glass-panel" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '40px 20px',
+          gap: '24px',
+          borderRadius: 'var(--radius-lg)',
+          flexGrow: 1,
+          overflowY: 'auto',
+          minHeight: '520px'
+        }}>
+          {/* LEVEL 1: CEO / HR MANAGER (Direzione) */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+            {(() => {
+              const manager = employees.find(e => e.department.toLowerCase().includes('hr') || e.role.toLowerCase().includes('manager')) || employees[0]
+              if (!manager) return <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Crea un dipendente HR/Manager per guidare l'organigramma.</p>
+              return (
+                <div 
+                  onClick={() => { setSelectedEmpId(manager.id); setShowOrgChart(false); setActiveSubTab('contract'); }}
+                  className="table-row-hover"
+                  style={{
+                    padding: '12px 18px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '2px solid var(--primary)',
+                    background: 'rgba(217, 4, 41, 0.05)',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 10px rgba(217,4,41,0.15)',
+                    minWidth: '220px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--primary)', color: 'white', fontWeight: 700, display: 'inline-block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                    👑 Direzione Generale & HR
+                  </div>
+                  <strong style={{ display: 'block', fontSize: '0.85rem' }}>{manager.name}</strong>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{manager.role}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>📧 {manager.email}</span>
+                </div>
+              )
+            })()}
+
+            {/* Linea verticale verso il basso */}
+            <div style={{ width: '2px', height: '24px', background: 'var(--border-color)', marginTop: '4px' }} />
+          </div>
+
+          {/* Linea orizzontale di collegamento */}
+          <div style={{ width: '60%', height: '2px', background: 'var(--border-color)', marginTop: '-24px', marginBottom: '24px' }} />
+
+          {/* LEVEL 2: Dipartimenti subordinati */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', width: '100%', maxWidth: '800px', alignItems: 'start' }}>
+            
+            {/* COLONNA A: Tech Department */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 'var(--radius-sm)', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', fontWeight: 700 }}>
+                💻 Dipartimento Tech
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', alignItems: 'center' }}>
+                {employees.filter(e => e.department.toLowerCase() === 'tech').map((emp, idx) => (
+                  <div 
+                    key={emp.id}
+                    onClick={() => { setSelectedEmpId(emp.id); setShowOrgChart(false); setActiveSubTab('contract'); }}
+                    className="table-row-hover"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-md)',
+                      border: idx === 0 ? '1px solid #3b82f6' : '1px solid var(--border-color)',
+                      background: idx === 0 ? 'rgba(59,130,246,0.02)' : 'var(--bg-card)',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      width: '200px',
+                      boxShadow: 'var(--shadow-sm)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {idx === 0 && (
+                      <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: '#3b82f6', color: 'white', fontWeight: 700, display: 'inline-block', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        Lead Developer
+                      </span>
+                    )}
+                    <strong style={{ display: 'block', fontSize: '0.8rem' }}>{emp.name}</strong>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>{emp.role}</span>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>📧 {emp.email}</span>
+                  </div>
+                ))}
+                {employees.filter(e => e.department.toLowerCase() === 'tech').length === 0 && (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Nessuna risorsa in Tech.</span>
+                )}
+              </div>
+            </div>
+
+            {/* COLONNA B: Commerciale / Vendite */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 700 }}>
+                📢 Commerciale & Sales
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', alignItems: 'center' }}>
+                {employees.filter(e => e.department.toLowerCase().includes('commer') || e.department.toLowerCase().includes('vendit')).map(emp => (
+                  <div 
+                    key={emp.id}
+                    onClick={() => { setSelectedEmpId(emp.id); setShowOrgChart(false); setActiveSubTab('contract'); }}
+                    className="table-row-hover"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-card)',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      width: '200px',
+                      boxShadow: 'var(--shadow-sm)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <strong style={{ display: 'block', fontSize: '0.8rem' }}>{emp.name}</strong>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>{emp.role}</span>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>📧 {emp.email}</span>
+                  </div>
+                ))}
+                {employees.filter(e => e.department.toLowerCase().includes('commer') || e.department.toLowerCase().includes('vendit')).length === 0 && (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Nessuna risorsa nel Commerciale.</span>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          <div style={{ marginTop: '20px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            💡 Clicca su qualsiasi scheda per aprire istantaneamente il suo **Fascicolo Digitale** contrattuale.
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3" style={{ gap: '16px', alignItems: 'stretch', flexGrow: 1 }}>
         {/* Colonna 1: Elenco dei Dipendenti */}
         <div className="glass-panel" style={{ borderRadius: 'var(--radius-lg)', padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '500px' }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
@@ -773,7 +914,7 @@ export default function EmployeesTab({
             </div>
           )}
         </div>
-      </div>
+      </div>)}
 
       {/* FORM DI AGGIUNTA / MODIFICA DIPENDENTE (MODAL INTERNO) */}
       {isFormOpen && (
