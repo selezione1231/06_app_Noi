@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Sun, Moon, LogOut, Database, Award, User, Plus, Cloud, Bell, Trash2, CheckCheck, AlertTriangle, Calendar, Receipt } from 'lucide-react'
+import { Sun, Moon, LogOut, Database, Award, User, Plus, Cloud, Bell, Trash2, CheckCheck, AlertTriangle, Calendar, Receipt, Smartphone, ExternalLink } from 'lucide-react'
+import { APP_MODE, getOtherAppUrl } from '../lib/appMode'
 
 export default function Header({ 
   user, 
@@ -224,6 +225,32 @@ export default function Header({
         >
           <span>📖 Guida PDF</span>
         </button>
+
+        {/* Link "Mio personale" → noi.todos.it */}
+        <a
+          href={getOtherAppUrl(APP_MODE.HUB)}
+          title="Vai alla tua area personale (timbra, ferie, buste paga)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 10px',
+            background: 'var(--primary-light)',
+            color: 'var(--primary)',
+            border: '1px solid var(--primary)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            height: '30px',
+            boxSizing: 'border-box'
+          }}
+        >
+          <Smartphone size={12} />
+          <span>Mio personale</span>
+          <ExternalLink size={10} />
+        </a>
 
         {/* Role Selector */}
         {onRoleChange && (

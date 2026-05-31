@@ -143,6 +143,22 @@ export default function PersonalApp({
             )}
           </div>
 
+          {showHubLink && (
+            <a
+              href={getOtherAppUrl(APP_MODE.PERSONAL)}
+              title="Vai all'Hub aziendale"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '6px 10px', height: '32px', boxSizing: 'border-box',
+                background: '#1e293b', color: 'white', borderRadius: '6px',
+                fontSize: '0.7rem', fontWeight: 700, textDecoration: 'none',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>Lavoro</span>
+              <ExternalLink size={10} />
+            </a>
+          )}
           <button title="Notifiche" style={iconBtn}>
             <Bell size={18} />
           </button>
@@ -156,27 +172,6 @@ export default function PersonalApp({
             }}>DEMO</span>
           )}
         </header>
-
-        {/* CTA "Vai al lavoro" (visibile a chi ha ruoli staff) */}
-        {showHubLink && (
-          <a
-            href={getOtherAppUrl(APP_MODE.PERSONAL)}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 16px',
-              background: 'linear-gradient(90deg, #1e293b 0%, #334155 100%)',
-              color: 'white',
-              textDecoration: 'none',
-              fontSize: '0.78rem',
-              fontWeight: 700
-            }}
-          >
-            <span>👔 Hai accesso anche all'Hub aziendale</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Vai al lavoro <ExternalLink size={12} />
-            </span>
-          </a>
-        )}
 
         {/* Contenuto */}
         <main style={{ flex: 1, padding: '16px', position: 'relative' }}>
