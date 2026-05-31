@@ -14,8 +14,33 @@ import AnalyticsTab from './components/AnalyticsTab'
 import ShiftPlannerTab from './components/ShiftPlannerTab'
 import MezziTab from './components/MezziTab'
 import WP2Module from './components/workpro/WP2Module'
+import AppShell from './components/layout/AppShell'
+import HomePage from './components/layout/HomePage'
+import { findItemById, ROLES } from './lib/navigation'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { Calendar, Users, Briefcase, Video, Trash2, ExternalLink, ShieldAlert, FolderArchive, FileCode, Receipt, BarChart3, Clock, CalendarDays, Car, HardHat } from 'lucide-react'
+
+// ----------------------------------------------------------------------------
+// Mapping role legacy → array di ruoli Hub
+// (Ruolo legacy del CRM HR vs nuovo RBAC multi-ruolo di Todos Hub)
+// ----------------------------------------------------------------------------
+function mapLegacyRoleToHubRoles(legacyRole) {
+  switch (legacyRole) {
+    case 'admin':
+      // Admin vede tutto
+      return Object.values(ROLES)
+    case 'hr':
+      return [ROLES.HR, ROLES.EMPLOYEE]
+    case 'pm':
+      return [ROLES.PM, ROLES.NETIMPL, ROLES.TEAM_LEADER, ROLES.EMPLOYEE]
+    case 'servizi_generali':
+      return [ROLES.SERVIZI_GEN, ROLES.IT, ROLES.EMPLOYEE]
+    case 'employee':
+      return [ROLES.EMPLOYEE]
+    default:
+      return [ROLES.EMPLOYEE]
+  }
+}
 
 // --- SEED DATI DEMO DI FALLBACK ---
 const DEFAULT_JOBS = [
@@ -553,6 +578,20 @@ export default function App() {
 
   // Navigazione principale: 'active', 'archived', 'templates', 'appointments', 'employees', 'absences'
   const [navTab, setNavTab] = useState('active')
+  // Todos Hub: voce sidebar attiva (default 'home')
+  const [currentNavItemId, setCurrentNavItemId] = useState('home')
+
+  // Handler navigazione sidebar Hub
+  const handleHubNavigate = (item) => {
+    if (!item) return
+    setCurrentNavItemId(item.id)
+    if (item.id === 'home') return                 // home → render HomePage
+    if (item.comingSoon) return                    // coming soon → niente
+    if (item.tabId) {
+      setSelectedJob(null)
+      setNavTab(item.tabId)                        // legacy o WP2: setta navTab
+    }
+  }
 
   // Stati navigazione/interfaccia
   const [selectedJob, setSelectedJob] = useState(null)
@@ -2156,92 +2195,50 @@ export default function App() {
     )
   }
 
+  // --- Render principale (Todos Hub shell con sidebar) ----------------------
+  const hubUserRoles = mapLegacyRoleToHubRoles(currentRole)
+  const headerNode = (
+    <Header
+      user={user}
+      isDemo={isDemo}
+      onLogout={handleLogout}
+      onOpenJobModal={() => { setSelectedJob(null); setNavTab('create-search'); setCurrentNavItemId('hr-active'); }}
+      notifications={notifications}
+      onMarkAsRead={handleMarkNotificationAsRead}
+      onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+      onClearNotifications={handleClearNotifications}
+      onOpenManual={() => setShowManualModal(true)}
+      showSeedButton={employees.length === 0}
+      onSeedDatabase={handleSeedSupabaseData}
+      currentRole={currentRole}
+      onRoleChange={setCurrentRole}
+    />
+  )
+
   return (
-    <div className="app-container">
-      
-      {/* Header / Navbar con Bottone "Crea Ricerca" */}
-      <Header 
-        user={user} 
-        isDemo={isDemo} 
-        onLogout={handleLogout} 
-        onOpenJobModal={() => { setSelectedJob(null); setNavTab('create-search'); }}
-        notifications={notifications}
-        onMarkAsRead={handleMarkNotificationAsRead}
-        onMarkAllAsRead={handleMarkAllNotificationsAsRead}
-        onClearNotifications={handleClearNotifications}
-        onOpenManual={() => setShowManualModal(true)}
-        showSeedButton={employees.length === 0}
-        onSeedDatabase={handleSeedSupabaseData}
-        currentRole={currentRole}
-        onRoleChange={setCurrentRole}
-      />
+    <AppShell
+      userRoles={hubUserRoles}
+      userName={user?.name || user?.email}
+      currentItemId={currentNavItemId}
+      onNavigate={handleHubNavigate}
+      header={headerNode}
+      onOpenSearch={() => alert('🔍 Search globale ⌘K — in costruzione (F0)')}
+    >
 
-      {/* 4 Navigation tabs: Active searches, Archived, Templates, and Appointments */}
-      <div style={{
-        background: 'var(--bg-sidebar)',
-        borderBottom: '1px solid var(--border-color)',
-        display: 'flex',
-        padding: '0 24px',
-        gap: '24px',
-        overflowX: 'auto'
-      }}>
-        {[
-          { id: 'active', label: '📋 Ricerche Attive', icon: <Briefcase size={15} />, roles: ['admin', 'hr'] },
-          { id: 'archived', label: '🗄️ Archivio Ricerche', icon: <FolderArchive size={15} />, roles: ['admin', 'hr'] },
-          { id: 'templates', label: '📂 Anagrafica Templates', icon: <FileCode size={15} />, roles: ['admin', 'hr'] },
-          { id: 'appointments', label: '📅 Appuntamenti', icon: <Calendar size={15} />, roles: ['admin', 'hr'] },
-          { id: 'employees', label: '👥 Dipendenti', icon: <Users size={15} />, roles: ['admin', 'hr', 'servizi_generali', 'pm'] },
-          { id: 'absences', label: '🗓️ Presenze & Ferie', icon: <Calendar size={15} />, roles: ['admin', 'hr', 'pm'] },
-          { id: 'expenses', label: '💼 Note Spese', icon: <Receipt size={15} />, roles: ['admin', 'hr', 'pm'] },
-          { id: 'shifts', label: '📅 Planner Turni', icon: <Clock size={15} />, roles: ['admin', 'hr', 'pm'] },
-          { id: 'analytics', label: '📊 HR Analytics', icon: <BarChart3 size={15} />, roles: ['admin', 'hr', 'pm'] },
-          { id: 'mezzi', label: '🚗 Mezzi', icon: <Car size={15} />, roles: ['admin', 'hr', 'servizi_generali', 'pm'] },
-          { id: 'wp2', label: '🛠️ WP_2 (Work-Pro)', icon: <HardHat size={15} />, roles: ['admin', 'hr', 'pm', 'servizi_generali'] }
-        ].filter(tab => tab.roles.includes(currentRole || 'admin')).map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => { setNavTab(tab.id); setSelectedJob(null); }}
-            style={{
-              background: 'none',
-              border: 'none',
-              borderBottom: navTab === tab.id ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-              padding: '12px 6px',
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              color: navTab === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              letterSpacing: '-0.01em',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.12s'
-            }}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-            {tab.id === 'appointments' && appointments.filter(a => isUpcoming(a.date_time)).length > 0 && (
-              <span style={{
-                background: 'var(--primary)',
-                color: 'white',
-                fontSize: '0.62rem',
-                padding: '1px 5px',
-                borderRadius: 'var(--radius-sm)',
-                fontWeight: 700,
-                marginLeft: '2px'
-              }}>
-                {appointments.filter(a => isUpcoming(a.date_time)).length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* === HOME PAGE === */}
+      {currentNavItemId === 'home' && (
+        <HomePage
+          userRoles={hubUserRoles}
+          userName={user?.name || user?.email}
+          onNavigate={handleHubNavigate}
+          isDemo={isDemo}
+        />
+      )}
 
-      {/* Main Content Area */}
-      <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        
-        {/* Render Single Job Kanban Board if selected */}
-        {selectedJob ? (
+      {/* === MODULI === */}
+      {currentNavItemId !== 'home' && (
+        /* Render Single Job Kanban Board if selected */
+        selectedJob ? (
           <KanbanBoard
             job={selectedJob}
             candidates={candidates}
@@ -2472,8 +2469,8 @@ export default function App() {
               />
             )}
           </>
-        )}
-      </main>
+        )
+      )}
 
       {/* Modale Creazione / Modifica (Ricerche Attive o Template) */}
       <JobModal
@@ -2841,6 +2838,6 @@ CREATE TABLE IF NOT EXISTS "06app_CRM_HR_fuel_transactions" (
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   )
 }

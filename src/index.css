@@ -549,3 +549,24 @@ input, textarea, select, button {
     display: none !important;
   }
 }
+
+/* ============================================================================
+   TODOS HUB — Layout responsive (Sidebar desktop / BottomNav mobile)
+   ============================================================================ */
+
+/* Mobile: nascondi sidebar desktop, mostra bottom nav */
+@media (max-width: 768px) {
+  .todos-hub-sidebar-desktop { display: none !important; }
+  .todos-hub-bottom-nav      { display: flex !important; }
+  .todos-hub-main            { padding-bottom: 70px !important; }
+  .todos-hub-mobile-header   { display: flex !important; }
+  .todos-hub-desktop-header  { display: none !important; }
+}
+
+/* Desktop: nascondi bottom nav, mostra header desktop */
+@media (min-width: 769px) {
+  .todos-hub-sidebar-desktop { display: flex !important; }
+  .todos-hub-bottom-nav      { display: none !important; }
+  .todos-hub-mobile-header   { display: none !important; }
+  .todos-hub-desktop-header  { display: flex !important; }
+}
