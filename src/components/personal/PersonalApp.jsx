@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ChevronLeft, LogOut, ExternalLink, Mic, Bell, User } from 'lucide-react'
+import { ChevronLeft, LogOut, ExternalLink, Mic, Bell, User, ShieldCheck } from 'lucide-react'
 
 import EmpHome from '../workpro/employee/EmpHome'
 import EmpMyTodos from '../workpro/employee/EmpMyTodos'
@@ -40,6 +40,7 @@ export default function PersonalApp({
   user,                 // sessione utente
   userRoles = [],       // array di ruoli Hub
   onLogout,
+  onDemoBackToAdmin,    // demo: torna admin (visibile solo in modalità demo)
   isDemo
 }) {
   const [employeeId, setEmployeeId] = useState(null)
@@ -165,7 +166,23 @@ export default function PersonalApp({
           <button title="Profilo" onClick={() => alert(`Utente: ${employee?.name}\nCodice: ${employee?.code}\nEmail: ${user?.email || '—'}`)} style={iconBtn}>
             <User size={18} />
           </button>
-          {isDemo && (
+          {isDemo && onDemoBackToAdmin && (
+            <button
+              onClick={onDemoBackToAdmin}
+              title="Demo: ripristina ruolo admin e torna all'Hub"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                fontSize: '0.62rem', padding: '4px 8px', borderRadius: '4px',
+                background: '#fef9c3', color: '#713f12', fontWeight: 800,
+                border: '1px solid #fde047', cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <ShieldCheck size={10} />
+              DEMO: torna admin
+            </button>
+          )}
+          {isDemo && !onDemoBackToAdmin && (
             <span style={{
               fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px',
               background: '#fef9c3', color: '#713f12', fontWeight: 800

@@ -2225,6 +2225,16 @@ export default function App() {
         userRoles={hubUserRoles}
         onLogout={handleLogout}
         isDemo={isDemo}
+        onDemoBackToAdmin={isDemo ? () => {
+          // Demo escape: ripristina tutti i ruoli, sblocca l'accesso all'Hub
+          handleUserRolesChange(Object.values(ROLES))
+          // Rimuove l'eventuale override ?mode=personal dall'URL
+          try {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('mode')
+            window.history.replaceState({}, '', url.toString())
+          } catch { /* no-op */ }
+        } : undefined}
       />
     )
   }
