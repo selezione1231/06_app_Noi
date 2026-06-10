@@ -109,23 +109,24 @@ export const NAV_TREE = [
         items: [
           { id: 'ops-clients',     label: 'Clienti',          icon: Briefcase,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.SALES, ROLES.ADMIN], tabId: 'wp2-clients' },
           { id: 'ops-sites',       label: 'Cantieri',         icon: Building2,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.ADMIN], tabId: 'wp2-sites' },
-          { id: 'ops-squads',      label: 'Squadre',          icon: Users2,      roles: [ROLES.PM, ROLES.NETIMPL, ROLES.HR, ROLES.ADMIN], comingSoon: true }
+          { id: 'ops-squads',      label: 'Squadre',          icon: Users2,      roles: [ROLES.PM, ROLES.NETIMPL, ROLES.HR, ROLES.ADMIN], tabId: 'squadre' }
         ]
       },
       {
         id: 'ops-approvals',
         label: 'Approvazioni',
         items: [
-          { id: 'ops-app-leave',   label: 'Richieste Ferie/Permessi', icon: ClipboardList, roles: [ROLES.PM, ROLES.HR, ROLES.ADMIN], tabId: 'wp2-leaves' },
-          { id: 'ops-app-hours',   label: 'Approva Inserimenti ore', icon: CheckCircle2,  roles: [ROLES.PM, ROLES.ADMIN], tabId: 'wp2-time' },
-          { id: 'ops-app-notes',   label: 'Note dai dipendenti',     icon: MessageSquare, roles: [ROLES.PM, ROLES.ADMIN], tabId: 'wp2-notes' }
+          { id: 'ops-app-leave',       label: 'Richieste Ferie/Permessi',  icon: ClipboardList, roles: [ROLES.PM, ROLES.HR, ROLES.ADMIN], tabId: 'wp2-leaves' },
+          { id: 'ops-app-hours',       label: 'Approva Inserimenti ore',   icon: CheckCircle2,  roles: [ROLES.PM, ROLES.ADMIN], tabId: 'wp2-time' },
+          { id: 'ops-app-notes',       label: 'Note dai dipendenti',       icon: MessageSquare, roles: [ROLES.PM, ROLES.ADMIN], tabId: 'wp2-notes' },
+          { id: 'ops-timbrature-cfg',  label: 'Config. Timbrature',        icon: Clock,         roles: [ROLES.ADMIN, ROLES.HR], tabId: 'timbrature-admin' }
         ]
       },
       {
         id: 'ops-commesse',
         label: 'Commesse & Costing',
         items: [
-          { id: 'ops-job-costing', label: 'Job costing',      icon: LineChart,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.FINANCE, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true }
+          { id: 'ops-job-costing', label: 'Job costing',      icon: LineChart,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.FINANCE, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'job-costing' }
         ]
       }
     ]
@@ -149,21 +150,24 @@ export const NAV_TREE = [
           { id: 'hr-appointments',  label: 'Appuntamenti',        icon: Calendar,     roles: [ROLES.HR, ROLES.ADMIN], tabId: 'appointments', legacy: true },
           { id: 'hr-employees',     label: 'Anagrafica Dipendenti', icon: Users2,     roles: [ROLES.HR, ROLES.SERVIZI_GEN, ROLES.PM, ROLES.ADMIN], tabId: 'employees', legacy: true },
           { id: 'hr-absences',      label: 'Presenze & Ferie',    icon: CalendarDays, roles: [ROLES.HR, ROLES.PM, ROLES.ADMIN], tabId: 'absences', legacy: true },
-          { id: 'hr-org',           label: 'Organigramma',        icon: Building,     roles: [ROLES.HR, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true },
-          { id: 'hr-skills',        label: 'Skill matrix',        icon: Award,        roles: [ROLES.HR, ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true },
-          { id: 'hr-lms',           label: 'Formazione (LMS)',    icon: BookOpen,     roles: [ROLES.HR, ROLES.HSE, ROLES.ADMIN], comingSoon: true },
-          { id: 'hr-onboarding',    label: 'Onboarding/Offboarding', icon: GraduationCap, roles: [ROLES.HR, ROLES.IT, ROLES.SERVIZI_GEN, ROLES.HSE, ROLES.ADMIN], comingSoon: true }
+          { id: 'hr-org',           label: 'Organigramma',        icon: Building,     roles: [ROLES.HR, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'organigramma' },
+          { id: 'hr-skills',        label: 'Skill matrix',        icon: Award,        roles: [ROLES.HR, ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'skill-matrix' },
+          { id: 'hr-lms',           label: 'Formazione (LMS)',    icon: BookOpen,     roles: [ROLES.HR, ROLES.HSE, ROLES.ADMIN], tabId: 'formazione' },
+          { id: 'hr-onboarding',    label: 'Onboarding',          icon: GraduationCap, roles: [ROLES.HR, ROLES.IT, ROLES.SERVIZI_GEN, ROLES.HSE, ROLES.ADMIN], tabId: 'onboarding', legacy: true },
+          { id: 'hr-offboarding',   label: 'Offboarding',         icon: GraduationCap, roles: [ROLES.HR, ROLES.IT, ROLES.SERVIZI_GEN, ROLES.HSE, ROLES.ADMIN], tabId: 'offboarding' },
+          { id: 'hr-documenti',     label: 'Documenti & Contratti', icon: FileText,   roles: [ROLES.HR, ROLES.ADMIN], tabId: 'documenti' }
         ]
       },
       {
         id: 'people-hse',
         label: 'HSE',
         items: [
-          { id: 'hse-certs',         label: 'Certificazioni dipendenti', icon: ShieldCheck, roles: [ROLES.HSE, ROLES.HR, ROLES.ADMIN], comingSoon: true },
-          { id: 'hse-sanitaria',     label: 'Sorveglianza sanitaria',    icon: HeartPulse, roles: [ROLES.HSE, ROLES.HR, ROLES.ADMIN], comingSoon: true },
-          { id: 'hse-dpi',           label: 'DPI',                       icon: HardHat,    roles: [ROLES.HSE, ROLES.SERVIZI_GEN, ROLES.ADMIN], comingSoon: true },
-          { id: 'hse-infortuni',     label: 'Near miss / Infortuni',     icon: AlertTriangle, roles: [ROLES.HSE, ROLES.HR, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true },
-          { id: 'hse-dvr',           label: 'DVR & procedure',           icon: FileText,   roles: [ROLES.HSE, ROLES.ADMIN], comingSoon: true }
+          { id: 'hse-dashboard',     label: 'Cruscotto HSE',             icon: ShieldCheck, roles: [ROLES.HSE, ROLES.HR, ROLES.ADMIN], tabId: 'hse' },
+          { id: 'hse-certs',         label: 'Certificazioni dipendenti', icon: ShieldCheck, roles: [ROLES.HSE, ROLES.HR, ROLES.ADMIN], tabId: 'hse' },
+          { id: 'hse-sanitaria',     label: 'Sorveglianza sanitaria',    icon: HeartPulse, roles: [ROLES.HSE, ROLES.HR, ROLES.ADMIN], tabId: 'hse' },
+          { id: 'hse-dpi',           label: 'DPI',                       icon: HardHat,    roles: [ROLES.HSE, ROLES.SERVIZI_GEN, ROLES.ADMIN], tabId: 'hse' },
+          { id: 'hse-infortuni',     label: 'Near miss / Infortuni',     icon: AlertTriangle, roles: [ROLES.HSE, ROLES.HR, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'hse' },
+          { id: 'hse-dvr',           label: 'DVR & procedure',           icon: FileText,   roles: [ROLES.HSE, ROLES.ADMIN], tabId: 'hse' }
         ]
       }
     ]
@@ -183,27 +187,27 @@ export const NAV_TREE = [
         items: [
           { id: 'asset-fleet',       label: 'Flotta mezzi',     icon: Car,     roles: [ROLES.SERVIZI_GEN, ROLES.PM, ROLES.ADMIN], tabId: 'mezzi', legacy: true },
           { id: 'asset-fleet-wp',    label: 'Automezzi (WP)',   icon: Car,     roles: [ROLES.SERVIZI_GEN, ROLES.PM, ROLES.ADMIN], tabId: 'wp2-vehicles' },
-          { id: 'asset-fuel',        label: 'Consumi carburante', icon: Fuel,  roles: [ROLES.SERVIZI_GEN, ROLES.FINANCE, ROLES.ADMIN], comingSoon: true },
-          { id: 'asset-sites',       label: 'Sedi & impianti',  icon: Building,roles: [ROLES.SERVIZI_GEN, ROLES.ADMIN], comingSoon: true },
-          { id: 'asset-equipment',   label: 'Beni & attrezzature', icon: Wrench, roles: [ROLES.SERVIZI_GEN, ROLES.HSE, ROLES.ADMIN], comingSoon: true }
+          { id: 'asset-fuel',        label: 'Consumi carburante', icon: Fuel,  roles: [ROLES.SERVIZI_GEN, ROLES.FINANCE, ROLES.ADMIN], tabId: 'asset-fuel' },
+          { id: 'asset-sites',       label: 'Sedi & impianti',  icon: Building,roles: [ROLES.SERVIZI_GEN, ROLES.ADMIN], tabId: 'asset-sites' },
+          { id: 'asset-equipment',   label: 'Beni & attrezzature', icon: Wrench, roles: [ROLES.SERVIZI_GEN, ROLES.HSE, ROLES.ADMIN], tabId: 'asset-equipment' }
         ]
       },
       {
         id: 'asset-it',
         label: 'IT',
         items: [
-          { id: 'it-devices',        label: 'PC, smartphone, SIM', icon: MonitorSmartphone, roles: [ROLES.IT, ROLES.ADMIN], comingSoon: true },
-          { id: 'it-network',        label: 'Apparati di rete',  icon: Wifi,             roles: [ROLES.IT, ROLES.ADMIN], comingSoon: true },
-          { id: 'it-licenses',       label: 'Licenze software',  icon: KeyRound,         roles: [ROLES.IT, ROLES.FINANCE, ROLES.ADMIN], comingSoon: true },
-          { id: 'it-accounts',       label: 'Account aziendali', icon: UserCircle2,      roles: [ROLES.IT, ROLES.ADMIN], comingSoon: true },
-          { id: 'it-helpdesk',       label: 'Help desk IT',      icon: MessageSquare,    roles: ALL, comingSoon: true }
+          { id: 'it-devices',        label: 'PC, smartphone, SIM', icon: MonitorSmartphone, roles: [ROLES.IT, ROLES.ADMIN], tabId: 'it-devices' },
+          { id: 'it-network',        label: 'Apparati di rete',  icon: Wifi,             roles: [ROLES.IT, ROLES.ADMIN], tabId: 'it-network' },
+          { id: 'it-licenses',       label: 'Licenze software',  icon: KeyRound,         roles: [ROLES.IT, ROLES.FINANCE, ROLES.ADMIN], tabId: 'it-licenses' },
+          { id: 'it-accounts',       label: 'Account aziendali', icon: UserCircle2,      roles: [ROLES.IT, ROLES.ADMIN], tabId: 'it-accounts' },
+          { id: 'it-helpdesk',       label: 'Help desk IT',      icon: MessageSquare,    roles: ALL, tabId: 'it-helpdesk' }
         ]
       },
       {
         id: 'asset-mag',
         label: 'Magazzino',
         items: [
-          { id: 'asset-warehouse',   label: 'Inventario',        icon: Package,          roles: [ROLES.SERVIZI_GEN, ROLES.IT, ROLES.PM, ROLES.ADMIN], comingSoon: true }
+          { id: 'asset-warehouse',   label: 'Inventario',        icon: Package,          roles: [ROLES.SERVIZI_GEN, ROLES.IT, ROLES.PM, ROLES.ADMIN], tabId: 'asset-warehouse' }
         ]
       }
     ]
@@ -221,18 +225,18 @@ export const NAV_TREE = [
         id: 'buying-suppliers',
         label: 'Fornitori',
         items: [
-          { id: 'buy-suppliers',     label: 'Anagrafica fornitori', icon: Briefcase,    roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], comingSoon: true },
-          { id: 'buy-listini',       label: 'Listini concordati',   icon: FileSpreadsheet, roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], comingSoon: true },
-          { id: 'buy-accordi',       label: 'Accordi quadro',       icon: FileText,     roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], comingSoon: true }
+          { id: 'buy-suppliers',     label: 'Anagrafica fornitori', icon: Briefcase,    roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], tabId: 'buy-suppliers' },
+          { id: 'buy-listini',       label: 'Listini concordati',   icon: FileSpreadsheet, roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], tabId: 'buy-listini' },
+          { id: 'buy-accordi',       label: 'Accordi quadro',       icon: FileText,     roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], tabId: 'buy-accordi' }
         ]
       },
       {
         id: 'buying-ops',
         label: 'Operatività',
         items: [
-          { id: 'buy-rda',           label: 'RDA — Richieste acquisto', icon: ClipboardList, roles: [ROLES.ACQUISTI, ROLES.PM, ROLES.SERVIZI_GEN, ROLES.IT, ROLES.HSE, ROLES.ADMIN], comingSoon: true },
-          { id: 'buy-orders',        label: 'Ordini fornitori',         icon: ShoppingCart,  roles: [ROLES.ACQUISTI, ROLES.ADMIN], comingSoon: true },
-          { id: 'buy-invoices',      label: 'Controllo fatture (AI)',   icon: FileSearch,    roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], comingSoon: true },
+          { id: 'buy-rda',           label: 'RDA — Richieste acquisto', icon: ClipboardList, roles: [ROLES.ACQUISTI, ROLES.PM, ROLES.SERVIZI_GEN, ROLES.IT, ROLES.HSE, ROLES.ADMIN], tabId: 'buy-rda' },
+          { id: 'buy-orders',        label: 'Ordini fornitori',         icon: ShoppingCart,  roles: [ROLES.ACQUISTI, ROLES.ADMIN], tabId: 'buy-orders' },
+          { id: 'buy-invoices',      label: 'Controllo fatture (AI)',   icon: FileSearch,    roles: [ROLES.ACQUISTI, ROLES.FINANCE, ROLES.ADMIN], tabId: 'buy-invoices' },
           { id: 'buy-expenses',      label: 'Note spese',               icon: Receipt,       roles: [ROLES.HR, ROLES.PM, ROLES.FINANCE, ROLES.ADMIN], tabId: 'expenses', legacy: true }
         ]
       }
@@ -252,9 +256,9 @@ export const NAV_TREE = [
         label: 'Dashboard',
         items: [
           { id: 'ins-hr',            label: 'HR Analytics',     icon: PieChart,  roles: [ROLES.HR, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'analytics', legacy: true },
-          { id: 'ins-ops',           label: 'Operations',       icon: Activity,  roles: [ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true },
-          { id: 'ins-cost',          label: 'Costi & margini',  icon: LineChart, roles: [ROLES.FINANCE, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true },
-          { id: 'ins-hse',           label: 'HSE',              icon: ShieldCheck, roles: [ROLES.HSE, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true }
+          { id: 'ins-ops',           label: 'Operations',       icon: Activity,  roles: [ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ins-ops' },
+          { id: 'ins-cost',          label: 'Costi & margini',  icon: LineChart, roles: [ROLES.FINANCE, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ins-cost' },
+          { id: 'ins-hse',           label: 'HSE',              icon: ShieldCheck, roles: [ROLES.HSE, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ins-hse' }
         ]
       },
       {
@@ -263,8 +267,9 @@ export const NAV_TREE = [
         items: [
           { id: 'ins-expiries',      label: 'Centro Scadenze',  icon: AlertOctagon, roles: STAFF, tabId: 'wp2-expiries' },
           { id: 'ins-audit',         label: 'Storico modifiche', icon: Activity, roles: [ROLES.ADMIN, ROLES.HR, ROLES.DIREZIONE], tabId: 'audit-log' },
-          { id: 'ins-exec',          label: 'Executive briefing', icon: Sparkles, roles: [ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true },
-          { id: 'ins-ai',            label: 'AI Copilot',       icon: Bot,       roles: [ROLES.HR, ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], comingSoon: true }
+          { id: 'ins-exec',          label: 'Executive briefing', icon: Sparkles, roles: [ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ins-exec' },
+          { id: 'ins-ai',            label: 'AI Copilot',       icon: Bot,       roles: [ROLES.HR, ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ai-copilot' },
+          { id: 'ins-reports',       label: 'Report & Stampe',  icon: FileText,  roles: [ROLES.HR, ROLES.PM, ROLES.FINANCE, ROLES.ADMIN], tabId: 'reports' }
         ]
       }
     ]

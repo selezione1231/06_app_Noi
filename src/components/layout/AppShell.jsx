@@ -26,6 +26,10 @@ export default function AppShell({
   // Header pass-through
   header,                  // ReactNode (Header già configurato)
 
+  // Multi-tenancy
+  activeCompanyId,
+  onCompanySelect,
+
   // Content
   children
 }) {
@@ -69,6 +73,8 @@ export default function AppShell({
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
         onOpenSearch={() => setSearchOpen(true)}
+        activeCompanyId={activeCompanyId}
+        onCompanySelect={onCompanySelect}
       />
 
       {/* SEARCH MODAL ⌘K */}

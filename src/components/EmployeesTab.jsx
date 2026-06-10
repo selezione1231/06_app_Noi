@@ -319,8 +319,8 @@ export default function EmployeesTab({
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', minHeight: 'calc(100vh - 120px)' }}>
       {/* Intestazione del Tab */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+        <div style={{ flex: '1 1 240px' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem' }}>👥 Anagrafica & Fascicolo Dipendenti</h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Gestione contratti, beni aziendali consegnati, checklists e scadenze legali del personale di Todos.it</p>
         </div>

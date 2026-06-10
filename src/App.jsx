@@ -18,10 +18,26 @@ import WP2Route from './components/workpro/WP2Route'
 import AppShell from './components/layout/AppShell'
 import HomePage from './components/layout/HomePage'
 import AuditLogViewer from './components/layout/AuditLogViewer'
+import AICopilot from './components/layout/AICopilot'
 import PersonalApp from './components/personal/PersonalApp'
+import DocumentiModule from './components/documenti/DocumentiModule'
+import HSEModule from './components/hse/HSEModule'
+import FormazioneModule from './components/formazione/FormazioneModule'
+import OffboardingModule from './components/hr/OffboardingModule'
+import ReportsHub from './components/reports/ReportsHub'
+import TimbratureAdmin from './components/workpro/pm/TimbratureAdmin'
+import SquadreModule from './components/operations/SquadreModule'
+import JobCostingModule from './components/operations/JobCostingModule'
+import OrgChartModule from './components/hr/OrgChartModule'
+import SkillMatrixModule from './components/hr/SkillMatrixModule'
+import AssetSGModule from './components/asset/AssetSGModule'
+import ITAssetModule from './components/asset/ITAssetModule'
+import BuyingModule from './components/buying/BuyingModule'
+import InsightsDashboards from './components/insights/InsightsDashboards'
 import { findItemById, ROLES } from './lib/navigation'
 import { APP_MODE, resolveAppMode, canAccessHub } from './lib/appMode'
 import { getCurrentUserRoles, setDemoUserRoles, getDemoUserRoles, legacyToArray } from './lib/rbac'
+import { getActiveCompanyId, setActiveCompanyId } from './lib/multitenancy'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { Calendar, Users, Briefcase, Video, Trash2, ExternalLink, ShieldAlert, FolderArchive, FileCode, Receipt, BarChart3, Clock, CalendarDays, Car, HardHat } from 'lucide-react'
 
@@ -582,6 +598,12 @@ export default function App() {
     }
   })
   const [showManualModal, setShowManualModal] = useState(false)
+  const [activeCompanyId, setActiveCompanyId_] = useState(() => getActiveCompanyId())
+
+  const handleCompanySelect = (id) => {
+    setActiveCompanyId_(id)
+    setActiveCompanyId(id)
+  }
 
   // Navigazione principale: 'active', 'archived', 'templates', 'appointments', 'employees', 'absences'
   const [navTab, setNavTab] = useState('active')
@@ -699,8 +721,20 @@ export default function App() {
     if (!currentRole) return
 
     // Tab "nuovi" sempre validi (gestiti via Hub sidebar + RBAC)
-    const newTabs = new Set(['home', 'audit-log'])
-    if (navTab && (newTabs.has(navTab) || navTab.startsWith('wp2'))) return
+    const newTabs = new Set([
+      'home', 'audit-log',
+      'documenti', 'hse', 'formazione', 'offboarding',
+      'reports', 'ai-copilot', 'timbrature-admin',
+      'squadre', 'job-costing', 'organigramma', 'skill-matrix'
+    ])
+    if (navTab && (
+      newTabs.has(navTab) ||
+      navTab.startsWith('wp2') ||
+      navTab.startsWith('asset-') ||
+      navTab.startsWith('it-') ||
+      navTab.startsWith('buy-') ||
+      navTab.startsWith('ins-')
+    )) return
 
     const availableTabs = [
       { id: 'active', roles: ['admin', 'hr'] },
@@ -2278,6 +2312,8 @@ export default function App() {
       currentItemId={currentNavItemId}
       onNavigate={handleHubNavigate}
       header={headerNode}
+      activeCompanyId={activeCompanyId}
+      onCompanySelect={handleCompanySelect}
     >
 
       {/* === HOME PAGE === */}
@@ -2519,7 +2555,48 @@ export default function App() {
             : navTab === 'wp2-employees'  ? <WP2Route view="employees" />
             : navTab === 'audit-log' ? (
               <AuditLogViewer />
-            ) : (
+            ) : navTab === 'documenti' ? (
+              <DocumentiModule userRoles={hubUserRoles} />
+            ) : navTab === 'hse' ? (
+              <HSEModule />
+            ) : navTab === 'formazione' ? (
+              <FormazioneModule />
+            ) : navTab === 'offboarding' ? (
+              <OffboardingModule />
+            ) : navTab === 'reports' ? (
+              <ReportsHub employees={employees} leaves={leaves} expenses={expenses} />
+            ) : navTab === 'ai-copilot' ? (
+              <AICopilot employees={employees} leaves={leaves} expenses={expenses} />
+            ) : navTab === 'timbrature-admin' ? (
+              <TimbratureAdmin />
+            ) : navTab === 'squadre' ? (
+              <SquadreModule />
+            ) : navTab === 'job-costing' ? (
+              <JobCostingModule />
+            ) : navTab === 'organigramma' ? (
+              <OrgChartModule />
+            ) : navTab === 'skill-matrix' ? (
+              <SkillMatrixModule />
+            ) : navTab === 'asset-fuel'      ? <AssetSGModule view="fuel" />
+            : navTab === 'asset-sites'       ? <AssetSGModule view="sites" />
+            : navTab === 'asset-equipment'   ? <AssetSGModule view="equipment" />
+            : navTab === 'asset-warehouse'   ? <AssetSGModule view="warehouse" />
+            : navTab === 'it-devices'        ? <ITAssetModule view="devices" />
+            : navTab === 'it-network'        ? <ITAssetModule view="network" />
+            : navTab === 'it-licenses'       ? <ITAssetModule view="licenses" />
+            : navTab === 'it-accounts'       ? <ITAssetModule view="accounts" />
+            : navTab === 'it-helpdesk'       ? <ITAssetModule view="helpdesk" />
+            : navTab === 'buy-suppliers'     ? <BuyingModule view="suppliers" />
+            : navTab === 'buy-listini'       ? <BuyingModule view="listini" />
+            : navTab === 'buy-accordi'       ? <BuyingModule view="accordi" />
+            : navTab === 'buy-rda'           ? <BuyingModule view="rda" />
+            : navTab === 'buy-orders'        ? <BuyingModule view="orders" />
+            : navTab === 'buy-invoices'      ? <BuyingModule view="invoices" />
+            : navTab === 'ins-ops'           ? <InsightsDashboards view="ops" />
+            : navTab === 'ins-cost'          ? <InsightsDashboards view="cost" />
+            : navTab === 'ins-hse'           ? <InsightsDashboards view="hse" />
+            : navTab === 'ins-exec'          ? <InsightsDashboards view="exec" />
+            : (
               /* JOBS DASHBOARD VIEWS: ACTIVE, ARCHIVED OR TEMPLATES */
               <Dashboard
                 jobs={jobs}

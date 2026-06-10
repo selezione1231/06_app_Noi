@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, ChevronDown, X, Search as SearchIcon, Sparkles } from 'lucide-react'
 import { filterTreeByRoles, ROLE_LABELS } from '../../lib/navigation'
+import CompanySwitcher from './CompanySwitcher'
 
 // ============================================================================
 // Sidebar — navigazione principale di Todos Hub
@@ -27,7 +28,9 @@ export default function Sidebar({
   onToggleCollapse,
   mobileOpen = false,
   onCloseMobile,
-  onOpenSearch
+  onOpenSearch,
+  activeCompanyId,
+  onCompanySelect
 }) {
   const tree = useMemo(() => filterTreeByRoles(userRoles), [userRoles])
 
@@ -132,6 +135,16 @@ export default function Sidebar({
             </button>
           )}
         </div>
+
+        {/* Company Switcher */}
+        {onCompanySelect && (
+          <CompanySwitcher
+            userRoles={userRoles}
+            activeCompanyId={activeCompanyId}
+            onSelect={onCompanySelect}
+            collapsed={isCollapsed}
+          />
+        )}
 
         {/* Quick action: Search ⌘K */}
         <div style={{ padding: isCollapsed ? '8px' : '10px 12px' }}>

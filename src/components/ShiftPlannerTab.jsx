@@ -1,637 +1,543 @@
-import React, { useState, useEffect } from 'react'
-import { Calendar, Clock, AlertTriangle, ChevronLeft, ChevronRight, Plus, Trash2, Edit2, ShieldAlert } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { ChevronLeft, ChevronRight, AlertTriangle, X, Trash2, Search } from 'lucide-react'
 
-export default function ShiftPlannerTab({ 
-  employees = [], 
-  shifts = [], 
-  leaves = [], 
-  onSaveShift, 
-  onDeleteShift 
-}) {
-  // Anchoring week starting Monday
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const today = new Date()
-    const day = today.getDay()
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
-    const monday = new Date(today.setDate(diff))
-    monday.setHours(0, 0, 0, 0)
-    return monday
-  })
+const DEMO_COMMESSE = [
+  { id: 'c1', code: 'INT-001', label: 'Sede Centrale Milano',        client: 'Interno',          color: '#3b82f6' },
+  { id: 'c2', code: 'CLI-045', label: 'Cantiere Roma EUR',            client: 'Costruzioni SpA',  color: '#f59e0b' },
+  { id: 'c3', code: 'CLI-046', label: 'Magazzino Bergamo',            client: 'LogiTrans Srl',    color: '#10b981' },
+  { id: 'c4', code: 'CLI-047', label: 'Manutenzione Impianti',        client: 'IndustriaX SpA',   color: '#8b5cf6' },
+  { id: 'c5', code: 'INT-002', label: 'Formazione interna',           client: 'Interno',          color: '#ec4899' },
+  { id: 'c6', code: 'CLI-048', label: 'Presidio Ospedale Sud',        client: 'Sanità Srl',       color: '#f97316' },
+  { id: 'c7', code: 'CLI-049', label: 'Evento Fiera Milano',          client: 'ExpoGroup',        color: '#06b6d4' },
+  { id: 'c8', code: 'INT-003', label: 'Reperibilità / Pronto interv.', client: 'Interno',         color: '#ef4444' },
+  { id: 'c9', code: 'CLI-050', label: 'Vigilanza Notturna Centro',    client: 'CentroComm SpA',   color: '#64748b' },
+  { id: 'c10',code: 'CLI-051', label: 'Portierato Palazzo Uffici',    client: 'ImmobiliareX',     color: '#a16207' },
+]
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingShift, setEditingShift] = useState(null)
+const PRESETS = [
+  { type: 'Mattina',    short: 'M', start: '08:00', end: '16:00', color: '#3b82f6' },
+  { type: 'Pomeriggio', short: 'P', start: '14:00', end: '22:00', color: '#f59e0b' },
+  { type: 'Notte',      short: 'N', start: '22:00', end: '06:00', color: '#8b5cf6' },
+  { type: 'Custom',     short: 'C', start: '',       end: '',       color: '#10b981' },
+]
 
-  // Modal form states
-  const [formEmployeeId, setFormEmployeeId] = useState('')
-  const [formDate, setFormDate] = useState('')
-  const [formType, setFormType] = useState('Mattina')
-  const [formStartTime, setFormStartTime] = useState('08:00')
-  const [formEndTime, setFormEndTime] = useState('16:00')
-  const [formNotes, setFormNotes] = useState('')
+const DAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
-  // Autofill shift times based on selection
-  useEffect(() => {
-    if (formType === 'Mattina') {
-      setFormStartTime('08:00')
-      setFormEndTime('16:00')
-    } else if (formType === 'Pomeriggio') {
-      setFormStartTime('14:00')
-      setFormEndTime('22:00')
-    } else if (formType === 'Notte') {
-      setFormStartTime('22:00')
-      setFormEndTime('06:00')
-    }
-  }, [formType])
+function getMonday(date) {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1))
+  d.setHours(0, 0, 0, 0)
+  return d
+}
 
-  // Get Monday to Sunday dates for the selected week
-  const getWeekDates = (start) => {
-    const dates = []
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start)
-      d.setDate(start.getDate() + i)
-      dates.push(d)
-    }
-    return dates
-  }
+function addDays(date, n) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + n)
+  return d
+}
 
-  const weekDates = getWeekDates(currentWeekStart)
-  const weekDatesStr = weekDates.map(d => d.toISOString().split('T')[0])
+function toDateStr(d) {
+  return d.toISOString().split('T')[0]
+}
 
-  const WEEK_DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
+function calcHours(start, end) {
+  if (!start || !end) return 0
+  const [sh, sm] = start.split(':').map(Number)
+  let [eh, em] = end.split(':').map(Number)
+  if (eh < sh || (eh === sh && em < sm)) eh += 24
+  return parseFloat(((eh * 60 + em - sh * 60 - sm) / 60).toFixed(1))
+}
 
-  // Navigation handlers
-  const handlePrevWeek = () => {
-    setCurrentWeekStart(prev => {
-      const d = new Date(prev)
-      d.setDate(prev.getDate() - 7)
-      return d
-    })
-  }
+export default function ShiftPlannerTab({ employees = [], shifts = [], leaves = [], onSaveShift, onDeleteShift }) {
+  const [weekStart, setWeekStart] = useState(() => getMonday(new Date()))
 
-  const handleNextWeek = () => {
-    setCurrentWeekStart(prev => {
-      const d = new Date(prev)
-      d.setDate(prev.getDate() + 7)
-      return d
-    })
-  }
+  // Inline popover
+  const [pop, setPop] = useState(null)       // { empId, dateStr, editShift | null }
+  const [query, setQuery] = useState('')
+  const [selCommessa, setSelCommessa] = useState(null)
+  const [selType, setSelType] = useState('Mattina')
+  const [selStart, setSelStart] = useState('08:00')
+  const [selEnd, setSelEnd] = useState('16:00')
+  const [showDrop, setShowDrop] = useState(false)
+  const searchRef = useRef(null)
+  const popRef = useRef(null)
 
-  const handleGoToToday = () => {
-    const today = new Date()
-    const day = today.getDay()
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1)
-    const monday = new Date(today.setDate(diff))
-    monday.setHours(0, 0, 0, 0)
-    setCurrentWeekStart(monday)
-  }
+  // Drag
+  const [dragging, setDragging] = useState(null)   // shift object
+  const [dropCell, setDropCell] = useState(null)   // { empId, dateStr }
 
-  // Get shifts assigned to an employee on a specific date string (YYYY-MM-DD)
-  const getDayShifts = (employeeId, dateStr) => {
-    return shifts.filter(s => s.employee_id === employeeId && s.shift_date === dateStr)
-  }
+  // Copy panel
+  const [copyPanel, setCopyPanel] = useState(null) // { shift, days: Set }
 
-  // Check if employee has an approved/pending leave on a specific date string
-  const getDayLeave = (employeeId, dateStr) => {
-    return leaves.find(l => {
-      if (l.employee_id !== employeeId) return false
-      // Leave must be approved or pending
-      if (l.status !== 'Approved' && l.status !== 'Pending') return false
-      return dateStr >= l.start_date && dateStr <= l.end_date
-    })
-  }
+  const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const weekStrs  = weekDates.map(toDateStr)
 
-  // Calculate shift duration in hours
-  const calculateShiftHours = (start, end) => {
-    if (!start || !end) return 0
-    const [sHour, sMin] = start.split(':').map(Number)
-    let [eHour, eMin] = end.split(':').map(Number)
-    
-    // Support night shift hours wrapping past midnight
-    if (eHour < sHour || (eHour === sHour && eMin < sMin)) {
-      eHour += 24
-    }
-    
-    const diffMins = (eHour * 60 + eMin) - (sHour * 60 + sMin)
-    return parseFloat((diffMins / 60).toFixed(1))
-  }
+  const prevWeek = () => setWeekStart(d => addDays(d, -7))
+  const nextWeek = () => setWeekStart(d => addDays(d, 7))
+  const goToday  = () => setWeekStart(getMonday(new Date()))
 
-  // Calculate total weekly hours for an employee
-  const getWeeklyHours = (employeeId) => {
-    let total = 0
-    shifts.forEach(s => {
-      if (s.employee_id === employeeId && weekDatesStr.includes(s.shift_date)) {
-        total += calculateShiftHours(s.start_time, s.end_time)
-      }
-    })
-    return total
-  }
-
-  // Open modal for creation
-  const handleOpenAddModal = (employeeId = '', dateStr = '') => {
-    if (employees.length === 0) {
-      alert("Nessun dipendente disponibile. Aggiungi personale nel tab Dipendenti.")
-      return
-    }
-    setEditingShift(null)
-    setFormEmployeeId(employeeId || employees[0].id)
-    setFormDate(dateStr || new Date().toISOString().split('T')[0])
-    setFormType('Mattina')
-    setFormStartTime('08:00')
-    setFormEndTime('16:00')
-    setFormNotes('')
-    setIsModalOpen(true)
-  }
-
-  // Open modal for editing
-  const handleOpenEditModal = (shift, e) => {
-    e.stopPropagation()
-    setEditingShift(shift)
-    setFormEmployeeId(shift.employee_id)
-    setFormDate(shift.shift_date)
-    setFormType(shift.shift_type)
-    setFormStartTime(shift.start_time)
-    setFormEndTime(shift.end_time)
-    setFormNotes(shift.notes || '')
-    setIsModalOpen(true)
-  }
-
-  // Handle shift save
-  const handleSubmitShift = async (e) => {
-    e.preventDefault()
-    if (!formEmployeeId || !formDate || !formStartTime || !formEndTime) return
-
-    const selectedEmp = employees.find(emp => emp.id === formEmployeeId)
-    if (!selectedEmp) return
-
-    // Conflict check 1: Overlap with approved leave
-    const leave = getDayLeave(formEmployeeId, formDate)
-    if (leave) {
-      const confirmForce = window.confirm(
-        `ATTENZIONE COLLISIONE!\n${selectedEmp.name} ha una richiesta di ${leave.type} (${leave.status === 'Approved' ? 'approvata' : 'in attesa'}) per il giorno ${formDate}.\nVuoi procedere comunque ad assegnare il turno?`
-      )
-      if (!confirmForce) return
-    }
-
-    // Conflict check 2: Already scheduled in similar hours (double shift)
-    const existingShifts = getDayShifts(formEmployeeId, formDate).filter(s => !editingShift || s.id !== editingShift.id)
-    if (existingShifts.length > 0) {
-      const confirmDouble = window.confirm(
-        `Nota: ${selectedEmp.name} ha già un altro turno assegnato per questa data (${formDate}).\nVuoi aggiungere un ulteriore turno contemporaneo?`
-      )
-      if (!confirmDouble) return
-    }
-
-    const shiftData = {
-      employee_id: formEmployeeId,
-      employee_name: selectedEmp.name,
-      shift_date: formDate,
-      start_time: formStartTime,
-      end_time: formEndTime,
-      shift_type: formType,
-      notes: formNotes
-    }
-
-    if (editingShift) {
-      shiftData.id = editingShift.id
-    }
-
-    await onSaveShift(shiftData)
-    setIsModalOpen(false)
-  }
-
-  // Handle shift delete
-  const handleDelete = async () => {
-    if (!editingShift) return
-    if (window.confirm("Sei sicuro di voler eliminare questo turno lavorativo?")) {
-      await onDeleteShift(editingShift.id)
-      setIsModalOpen(false)
-    }
-  }
-
-  // Format date readable
-  const formatWeekRange = () => {
-    const monday = weekDates[0]
-    const sunday = weekDates[6]
+  const fmtRange = () => {
     const opt = { day: 'numeric', month: 'short' }
-    const optYr = { day: 'numeric', month: 'short', year: 'numeric' }
-    return `${monday.toLocaleDateString('it-IT', opt)} - ${sunday.toLocaleDateString('it-IT', optYr)}`
+    return `${weekDates[0].toLocaleDateString('it-IT', opt)} – ${weekDates[6].toLocaleDateString('it-IT', { ...opt, year: 'numeric' })}`
   }
 
-  // Shift type style mapping
-  const getShiftBadgeStyle = (type, hasConflict) => {
-    let bg = 'var(--primary-light)'
-    let color = 'var(--primary)'
-    let border = '1px solid rgba(217, 4, 41, 0.15)'
+  const todayStr = toDateStr(new Date())
 
-    if (type === 'Mattina') {
-      bg = 'rgba(59, 130, 246, 0.1)'
-      color = '#3b82f6'
-      border = '1px solid rgba(59, 130, 246, 0.2)'
-    } else if (type === 'Pomeriggio') {
-      bg = 'var(--warning-light)'
-      color = 'var(--warning)'
-      border = '1px solid rgba(208, 128, 0, 0.2)'
-    } else if (type === 'Notte') {
-      bg = 'rgba(139, 92, 246, 0.1)'
-      color = '#8b5cf6'
-      border = '1px solid rgba(139, 92, 246, 0.2)'
-    } else if (type === 'Custom') {
-      bg = 'var(--success-light)'
-      color = 'var(--success)'
-      border = '1px solid rgba(15, 159, 110, 0.2)'
-    }
+  // --- data helpers ---
+  const getDayShifts = (empId, dateStr) => shifts.filter(s => s.employee_id === empId && s.shift_date === dateStr)
+  const getDayLeave  = (empId, dateStr) => leaves.find(l => l.employee_id === empId && (l.status === 'Approved' || l.status === 'Pending') && dateStr >= l.start_date && dateStr <= l.end_date)
+  const weekHours    = (empId) => {
+    let h = 0
+    shifts.forEach(s => { if (s.employee_id === empId && weekStrs.includes(s.shift_date)) h += calcHours(s.start_time, s.end_time) })
+    return parseFloat(h.toFixed(1))
+  }
 
-    // Force alert outline if conflict is active
-    if (hasConflict) {
-      border = '1.5px solid var(--danger)'
-      bg = 'var(--danger-light)'
-    }
+  const getCommessa = (id) => DEMO_COMMESSE.find(c => c.id === id)
+  const filtered = query.length
+    ? DEMO_COMMESSE.filter(c => `${c.code} ${c.label} ${c.client}`.toLowerCase().includes(query.toLowerCase()))
+    : DEMO_COMMESSE
 
-    return {
-      background: bg,
-      color: color,
-      border: border,
-      borderRadius: 'var(--radius-sm)',
-      padding: '4px 6px',
-      fontSize: '0.68rem',
-      fontWeight: 700,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '2px',
-      cursor: 'pointer',
-      transition: 'transform 0.12s ease, box-shadow 0.12s ease',
-      boxShadow: 'var(--shadow-sm)'
+  // --- popover open ---
+  const openPop = (empId, dateStr, editShift = null) => {
+    if (editShift) {
+      const c = getCommessa(editShift.commessa_id)
+      setSelCommessa(c || null)
+      setQuery(c ? `${c.code} — ${c.label}` : (editShift.notes || ''))
+      setSelType(editShift.shift_type || 'Mattina')
+      setSelStart(editShift.start_time)
+      setSelEnd(editShift.end_time)
+    } else {
+      setSelCommessa(null)
+      setQuery('')
+      setSelType('Mattina')
+      setSelStart('08:00')
+      setSelEnd('16:00')
     }
+    setShowDrop(false)
+    setPop({ empId, dateStr, editShift })
+    setTimeout(() => searchRef.current?.focus(), 40)
+  }
+
+  const closePop = () => { setPop(null); setShowDrop(false) }
+
+  const pickPreset = (p) => {
+    setSelType(p.type)
+    if (p.type !== 'Custom') { setSelStart(p.start); setSelEnd(p.end) }
+  }
+
+  const pickCommessa = (c) => {
+    setSelCommessa(c)
+    setQuery(`${c.code} — ${c.label}`)
+    setShowDrop(false)
+    setTimeout(() => searchRef.current?.blur(), 10)
+  }
+
+  const savePop = async () => {
+    if (!pop) return
+    const emp = employees.find(e => e.id === pop.empId)
+    if (!emp) return
+    const data = {
+      employee_id: pop.empId,
+      employee_name: emp.name,
+      shift_date: pop.dateStr,
+      start_time: selStart,
+      end_time: selEnd,
+      shift_type: selType,
+      commessa_id: selCommessa?.id || null,
+      commessa_label: selCommessa ? `${selCommessa.code} — ${selCommessa.label}` : (query || null),
+      notes: selCommessa ? `${selCommessa.code} — ${selCommessa.label}` : (query || null),
+    }
+    if (pop.editShift) data.id = pop.editShift.id
+    await onSaveShift(data)
+    closePop()
+  }
+
+  const deletePop = async () => {
+    if (!pop?.editShift) return
+    await onDeleteShift(pop.editShift.id)
+    closePop()
+  }
+
+  // close on ESC / outside click
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') { closePop(); setCopyPanel(null) } }
+    const onDown = (e) => { if (popRef.current && !popRef.current.contains(e.target)) closePop() }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onDown)
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onDown) }
+  }, [])
+
+  // --- drag & drop ---
+  const onDragStart = (e, shift) => {
+    e.dataTransfer.effectAllowed = 'move'
+    setDragging(shift)
+  }
+  const onDragOver = (e, empId, dateStr) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDropCell({ empId, dateStr })
+  }
+  const onDrop = async (e, empId, dateStr) => {
+    e.preventDefault()
+    if (!dragging) return
+    if (dragging.employee_id === empId && dragging.shift_date === dateStr) { setDragging(null); setDropCell(null); return }
+    const emp = employees.find(x => x.id === empId)
+    await onSaveShift({ ...dragging, employee_id: empId, employee_name: emp?.name || dragging.employee_name, shift_date: dateStr })
+    setDragging(null); setDropCell(null)
+  }
+  const onDragEnd = () => { setDragging(null); setDropCell(null) }
+
+  // --- right-click copy ---
+  const onContextMenu = (e, shift) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setCopyPanel({ shift, days: new Set() })
+  }
+  const toggleDay = (dateStr) => setCopyPanel(p => {
+    if (!p) return null
+    const d = new Set(p.days)
+    d.has(dateStr) ? d.delete(dateStr) : d.add(dateStr)
+    return { ...p, days: d }
+  })
+  const confirmCopy = async () => {
+    if (!copyPanel) return
+    for (const dateStr of copyPanel.days) {
+      const emp = employees.find(e => e.id === copyPanel.shift.employee_id)
+      await onSaveShift({ ...copyPanel.shift, id: undefined, shift_date: dateStr, employee_name: emp?.name || copyPanel.shift.employee_name })
+    }
+    setCopyPanel(null)
+  }
+
+  // --- shift block color ---
+  const shiftColor = (shift) => {
+    const c = getCommessa(shift.commessa_id)
+    if (c) return c.color
+    return PRESETS.find(p => p.type === shift.shift_type)?.color || '#6b7280'
   }
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', minHeight: 'calc(100vh - 120px)' }}>
-      {/* Header and title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem' }}>📅 Planner Grafico dei Turni</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Pianificazione settimanale orari dipendenti con collision detector ferie ed esubero ore</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => handleOpenAddModal()}>
-          <Plus size={15} />
-          <span>Nuovo Turno Lavorativo</span>
-        </button>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)', overflow: 'hidden', fontFamily: 'var(--font-body)' }}>
 
-      {/* Week Navigation Timeline */}
-      <div className="glass-panel" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 18px',
-        borderRadius: 'var(--radius-lg)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button className="btn btn-secondary" style={{ padding: '6px 10px' }} onClick={handlePrevWeek}>
-            <ChevronLeft size={16} />
-          </button>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.95rem', minWidth: '220px', textAlignment: 'center', display: 'inline-block' }}>
-            {formatWeekRange()}
-          </span>
-          <button className="btn btn-secondary" style={{ padding: '6px 10px' }} onClick={handleNextWeek}>
-            <ChevronRight size={16} />
-          </button>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700 }} onClick={handleGoToToday}>
-            Oggi
-          </button>
+      {/* ── Header ── */}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, background: 'var(--bg-card)' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.15rem', margin: 0 }}>
+          Pianificazione Settimanale
+        </h2>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button className="btn btn-secondary" style={{ padding: '5px 9px' }} onClick={prevWeek}><ChevronLeft size={15} /></button>
+          <span style={{ fontWeight: 700, fontSize: '0.88rem', minWidth: '195px', textAlign: 'center' }}>{fmtRange()}</span>
+          <button className="btn btn-secondary" style={{ padding: '5px 9px' }} onClick={nextWeek}><ChevronRight size={15} /></button>
+          <button className="btn btn-secondary" style={{ padding: '5px 11px', fontSize: '0.73rem', fontWeight: 700 }} onClick={goToday}>Oggi</button>
         </div>
       </div>
 
-      {/* Main Grid Calendar representation */}
-      <div className="glass-panel" style={{ borderRadius: 'var(--radius-lg)', padding: '18px', overflowX: 'auto' }}>
-        {employees.length === 0 ? (
-          <div style={{ padding: '40px', textAlignment: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-            Nessun dipendente censito nel database. Aggiungi prima personale nel tab Dipendenti.
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '850px' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-app)', borderBottom: '2px solid var(--border-color)', height: '40px' }}>
-                <th style={{ padding: '10px', textAlignment: 'left', minWidth: '180px', fontWeight: 800, fontSize: '0.78rem' }}>Dipendente</th>
-                <th style={{ padding: '10px', textAlignment: 'center', width: '90px', fontWeight: 800, fontSize: '0.78rem' }}>Tot. Ore Week</th>
-                {weekDates.map((date, idx) => (
-                  <th key={idx} style={{ padding: '10px', textAlignment: 'center', minWidth: '110px', fontWeight: 800, fontSize: '0.78rem' }}>
-                    <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{WEEK_DAYS[idx]}</div>
-                    <div style={{ fontSize: '0.68rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+      {/* ── Hint bar ── */}
+      <div style={{ padding: '5px 16px', background: 'rgba(168,34,56,0.04)', borderBottom: '1px solid var(--border-color)', fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'flex', gap: '18px', flexShrink: 0 }}>
+        <span><strong>Clic cella</strong> → assegna commessa</span>
+        <span><strong>Trascina</strong> blocco → sposta</span>
+        <span><strong>Tasto destro</strong> su blocco → copia su altri giorni</span>
+      </div>
+
+      {/* ── Grid ── */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: '860px' }}>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+            <tr style={{ background: 'var(--bg-card)', borderBottom: '2px solid var(--border-color)' }}>
+              <th style={{ width: '150px', padding: '8px 12px', textAlign: 'left', fontSize: '0.7rem', fontWeight: 800 }}>Dipendente</th>
+              <th style={{ width: '48px', padding: '8px 4px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 800 }}>Ore</th>
+              {weekDates.map((date, i) => {
+                const isToday = weekStrs[i] === todayStr
+                return (
+                  <th key={i} style={{ padding: '6px 3px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 800, borderLeft: '1px solid var(--border-color)', background: isToday ? 'rgba(168,34,56,0.07)' : 'var(--bg-card)' }}>
+                    <div style={{ fontWeight: 800, color: isToday ? 'var(--primary)' : 'var(--text-primary)' }}>{DAYS[i]}</div>
+                    <div style={{ fontSize: '0.63rem', fontWeight: 500, color: isToday ? 'var(--primary)' : 'var(--text-muted)', marginTop: '1px' }}>
                       {date.toLocaleDateString('it-IT', { day: 'numeric', month: 'numeric' })}
                     </div>
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map(emp => {
-                const weeklyHours = getWeeklyHours(emp.id)
-                const isOvertime = weeklyHours > 40
-
-                return (
-                  <tr key={emp.id} style={{ borderBottom: '1px solid var(--border-color)', minHeight: '65px' }}>
-                    {/* Employee Capsule info */}
-                    <td style={{ padding: '10px', verticalAlign: 'middle' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-primary)' }}>{emp.name}</div>
-                      <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{emp.role}</div>
-                      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>{emp.department}</div>
-                    </td>
-
-                    {/* Weekly hours counter */}
-                    <td style={{ padding: '10px', textAlignment: 'center', verticalAlign: 'middle' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: 'var(--radius-full)',
-                        fontSize: '0.75rem',
-                        fontWeight: 800,
-                        background: isOvertime ? 'var(--danger-light)' : 'rgba(0,0,0,0.03)',
-                        color: isOvertime ? 'var(--danger)' : 'var(--text-primary)',
-                        border: isOvertime ? '1px solid rgba(224, 36, 36, 0.2)' : '1px solid var(--border-color)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '2px'
-                      }} title={isOvertime ? 'Supero soglia contrattuale di 40h' : 'Totale ore programmate'}>
-                        {weeklyHours}h
-                        {isOvertime && <AlertTriangle size={10} />}
-                      </span>
-                    </td>
-
-                    {/* Weekly grid cells */}
-                    {weekDatesStr.map((dateStr, idx) => {
-                      const dayShifts = getDayShifts(emp.id, dateStr)
-                      const leave = getDayLeave(emp.id, dateStr)
-                      const hasConflict = dayShifts.length > 0 && !!leave
-
-                      return (
-                        <td 
-                          key={idx} 
-                          style={{ 
-                            padding: '6px', 
-                            verticalAlign: 'top', 
-                            background: leave ? 'rgba(0,0,0,0.015)' : 'transparent',
-                            borderRight: '1px solid var(--border-color)',
-                            position: 'relative'
-                          }}
-                          className="shift-grid-cell"
-                        >
-                          {/* Leave conflict alert */}
-                          {leave && (
-                            <div style={{
-                              background: leave.type === 'Ferie' ? 'var(--success-light)' : leave.type === 'Malattia' ? 'var(--danger-light)' : 'var(--warning-light)',
-                              color: leave.type === 'Ferie' ? 'var(--success)' : leave.type === 'Malattia' ? 'var(--danger)' : 'var(--warning)',
-                              fontSize: '0.6rem',
-                              padding: '2px 4px',
-                              borderRadius: '2px',
-                              fontWeight: 800,
-                              textAlign: 'center',
-                              marginBottom: '6px',
-                              border: `1px dashed ${leave.type === 'Ferie' ? 'var(--success)' : leave.type === 'Malattia' ? 'var(--danger)' : 'var(--warning)'}`
-                            }} title={`Assenza registrata: ${leave.notes || 'Nessuna nota'}`}>
-                              🏝️ {leave.type.toUpperCase()} ({leave.status === 'Approved' ? 'APP' : 'PEND'})
-                            </div>
-                          )}
-
-                          {/* Render shifts inside cell */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {dayShifts.map(shift => (
-                              <div
-                                key={shift.id}
-                                style={getShiftBadgeStyle(shift.shift_type, !!leave)}
-                                onClick={(e) => handleOpenEditModal(shift, e)}
-                                title={shift.notes || 'Turno assegnato'}
-                              >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 800 }}>
-                                  <span>{shift.shift_type}</span>
-                                  <Clock size={9} />
-                                </div>
-                                <span style={{ fontSize: '0.62rem', opacity: 0.9 }}>
-                                  {shift.start_time} - {shift.end_time}
-                                </span>
-                                {shift.notes && (
-                                  <span style={{ 
-                                    fontSize: '0.58rem', 
-                                    opacity: 0.7, 
-                                    borderTop: '0.5px solid rgba(0,0,0,0.1)', 
-                                    paddingTop: '2px', 
-                                    marginTop: '2px',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis'
-                                  }}>
-                                    {shift.notes}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Add button on hover */}
-                          <button
-                            className="cell-add-btn"
-                            onClick={() => handleOpenAddModal(emp.id, dateStr)}
-                            style={{
-                              position: 'absolute',
-                              bottom: '4px',
-                              right: '4px',
-                              background: 'var(--primary)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: '18px',
-                              height: '18px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              opacity: 0,
-                              transition: 'opacity 0.15s ease',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                            }}
-                            title="Assegna turno"
-                          >
-                            <Plus size={10} />
-                          </button>
-                        </td>
-                      )
-                    })}
-                  </tr>
                 )
               })}
-            </tbody>
-          </table>
-        )}
+            </tr>
+          </thead>
+          <tbody>
+            {employees.length === 0 ? (
+              <tr><td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                Nessun dipendente — aggiungine nel tab Dipendenti.
+              </td></tr>
+            ) : employees.map(emp => {
+              const wh = weekHours(emp.id)
+              const over = wh > 40
+              return (
+                <tr key={emp.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  {/* Name */}
+                  <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-primary)' }}>{emp.name}</div>
+                    <div style={{ fontSize: '0.63rem', color: 'var(--text-secondary)' }}>{emp.role}</div>
+                  </td>
+                  {/* Hours */}
+                  <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '4px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: over ? 'var(--danger)' : 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                      {wh}h{over && <AlertTriangle size={9} />}
+                    </span>
+                  </td>
+                  {/* Day cells */}
+                  {weekStrs.map((dateStr, di) => {
+                    const dayShifts = getDayShifts(emp.id, dateStr)
+                    const leave = getDayLeave(emp.id, dateStr)
+                    const isTarget = dropCell?.empId === emp.id && dropCell?.dateStr === dateStr
+                    const isToday = dateStr === todayStr
+                    return (
+                      <td
+                        key={di}
+                        onClick={() => !dragging && openPop(emp.id, dateStr)}
+                        onDragOver={(e) => onDragOver(e, emp.id, dateStr)}
+                        onDrop={(e) => onDrop(e, emp.id, dateStr)}
+                        onDragLeave={() => setDropCell(null)}
+                        style={{
+                          borderLeft: '1px solid var(--border-color)',
+                          padding: '4px 3px',
+                          verticalAlign: 'top',
+                          minHeight: '60px',
+                          cursor: dragging ? 'copy' : 'pointer',
+                          background: isTarget ? 'rgba(168,34,56,0.12)' : isToday ? 'rgba(168,34,56,0.03)' : leave ? 'rgba(0,0,0,0.015)' : 'transparent',
+                          outline: isTarget ? '2px dashed var(--primary)' : 'none',
+                          transition: 'background 0.1s',
+                          position: 'relative',
+                        }}
+                      >
+                        {/* Leave badge */}
+                        {leave && (
+                          <div style={{ fontSize: '0.58rem', fontWeight: 800, padding: '1px 4px', borderRadius: '3px', marginBottom: '3px', textAlign: 'center', background: leave.type === 'Ferie' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: leave.type === 'Ferie' ? '#059669' : '#dc2626', border: `1px dashed ${leave.type === 'Ferie' ? '#059669' : '#dc2626'}` }}>
+                            {leave.type === 'Ferie' ? '🏖' : leave.type === 'Malattia' ? '🤒' : '🏠'} {leave.type.slice(0, 3)}
+                          </div>
+                        )}
+
+                        {/* Shift blocks */}
+                        {dayShifts.map(shift => {
+                          const col = shiftColor(shift)
+                          const comm = getCommessa(shift.commessa_id)
+                          const isDrag = dragging?.id === shift.id
+                          return (
+                            <div
+                              key={shift.id}
+                              draggable
+                              onDragStart={(e) => { e.stopPropagation(); onDragStart(e, shift) }}
+                              onDragEnd={onDragEnd}
+                              onContextMenu={(e) => onContextMenu(e, shift)}
+                              onClick={(e) => { e.stopPropagation(); openPop(emp.id, dateStr, shift) }}
+                              title={`${comm ? comm.label : shift.shift_type} · ${shift.start_time}–${shift.end_time}\nClic → modifica  |  Tasto destro → copia`}
+                              style={{
+                                background: `${col}15`,
+                                border: `1.5px solid ${col}45`,
+                                borderLeft: `3px solid ${col}`,
+                                borderRadius: '4px',
+                                padding: '3px 4px',
+                                marginBottom: '3px',
+                                cursor: 'grab',
+                                opacity: isDrag ? 0.35 : 1,
+                                transition: 'opacity 0.12s',
+                                userSelect: 'none',
+                              }}
+                            >
+                              <div style={{ fontWeight: 800, fontSize: '0.66rem', color: col, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {comm ? comm.code : shift.shift_type}
+                              </div>
+                              <div style={{ fontSize: '0.59rem', color: 'var(--text-muted)' }}>
+                                {shift.start_time}–{shift.end_time}
+                              </div>
+                              {comm && (
+                                <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {comm.client}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+
+                        {/* Empty cell hint */}
+                        {dayShifts.length === 0 && !leave && (
+                          <div className="cell-hint" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: '1.2rem', color: 'rgba(168,34,56,0.18)', opacity: 0, transition: 'opacity 0.15s' }}>+</div>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
 
-      {/* Grid Legend */}
-      <div className="glass-panel" style={{ borderRadius: 'var(--radius-lg)', padding: '14px 18px', display: 'flex', gap: '20px', flexWrap: 'wrap', fontSize: '0.72rem' }}>
-        <strong style={{ color: 'var(--text-primary)' }}>Legenda Turni:</strong>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '12px', height: '12px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '2px' }} />
-          <span>Mattina (08:00 - 16:00)</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '12px', height: '12px', background: 'var(--warning-light)', border: '1px solid rgba(208, 128, 0, 0.3)', borderRadius: '2px' }} />
-          <span>Pomeriggio (14:00 - 22:00)</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '12px', height: '12px', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '2px' }} />
-          <span>Notte (22:00 - 06:00)</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '12px', height: '12px', background: 'var(--success-light)', border: '1px solid rgba(15, 159, 110, 0.3)', borderRadius: '2px' }} />
-          <span>Custom / Altro</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '12px', height: '12px', background: 'var(--danger-light)', border: '1.5px solid var(--danger)', borderRadius: '2px' }} />
-          <span style={{ fontWeight: 700, color: 'var(--danger)' }}>Collisione Rilevata (In Ferie/Assente)</span>
-        </div>
-      </div>
-
-      {/* INTERACTIVE ADD/EDIT MODAL */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ background: 'var(--bg-card)', maxWidth: '480px' }}>
-            <div className="modal-header">
-              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem' }}>
-                {editingShift ? "✍️ Modifica Turno Lavorativo" : "📅 Programma Nuovo Turno"}
-              </h3>
-              <button 
-                style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-primary)' }} 
-                onClick={() => setIsModalOpen(false)}
-              >
-                ×
-              </button>
+      {/* ══════════════════════════════════
+          INLINE POPOVER — assegna commessa
+      ══════════════════════════════════ */}
+      {pop && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+          <div
+            ref={popRef}
+            style={{
+              position: 'fixed',
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '310px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.2)',
+              padding: '16px',
+              zIndex: 201,
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 800 }}>
+                {employees.find(e => e.id === pop.empId)?.name}
+                <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: '6px' }}>
+                  {new Date(pop.dateStr + 'T12:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+              <button onClick={closePop} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex' }}><X size={15} /></button>
             </div>
-            
-            <form onSubmit={handleSubmitShift}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                
-                {/* Employee selection */}
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Dipendente *</label>
-                  <select
-                    required
-                    value={formEmployeeId}
-                    onChange={e => setFormEmployeeId(e.target.value)}
-                    disabled={!!editingShift}
-                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                  >
-                    {employees.map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
-                    ))}
-                  </select>
-                </div>
 
-                {/* Date selection */}
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Data del Turno *</label>
-                  <input
-                    type="date"
-                    required
-                    value={formDate}
-                    onChange={e => setFormDate(e.target.value)}
-                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                  />
-                </div>
-
-                {/* Shift Type */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block' }}>Tipologia Turno</label>
-                  <select
-                    value={formType}
-                    onChange={e => setFormType(e.target.value)}
-                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                  >
-                    <option value="Mattina">Mattina (08:00 - 16:00)</option>
-                    <option value="Pomeriggio">Pomeriggio (14:00 - 22:00)</option>
-                    <option value="Notte">Notte (22:00 - 06:00)</option>
-                    <option value="Custom">Custom / Orario Personalizzato</option>
-                  </select>
-                </div>
-
-                {/* Time selection (only enabled for Custom or editable times) */}
-                <div className="grid grid-cols-2" style={{ gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Ora Inizio *</label>
-                    <input
-                      type="time"
-                      required
-                      value={formStartTime}
-                      onChange={e => setFormStartTime(e.target.value)}
-                      disabled={formType !== 'Custom'}
-                      style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Ora Fine *</label>
-                    <input
-                      type="time"
-                      required
-                      value={formEndTime}
-                      onChange={e => setFormEndTime(e.target.value)}
-                      disabled={formType !== 'Custom'}
-                      style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Note / Dettagli Turno</label>
-                  <input
-                    type="text"
-                    placeholder="es. Sede Centrale, Presidio Clienti..."
-                    value={formNotes}
-                    onChange={e => setFormNotes(e.target.value)}
-                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                  />
-                </div>
+            {/* Commessa search */}
+            <div style={{ marginBottom: '10px', position: 'relative' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.04em' }}>COMMESSA</div>
+              <div style={{ position: 'relative' }}>
+                <Search size={13} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Cerca per codice, cliente, nome..."
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setShowDrop(true); if (!e.target.value) setSelCommessa(null) }}
+                  onFocus={() => setShowDrop(true)}
+                  onKeyDown={e => { if (e.key === 'Enter' && filtered.length > 0) { pickCommessa(filtered[0]); e.preventDefault() } }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '7px 8px 7px 28px', border: `1.5px solid ${selCommessa ? 'var(--primary)' : 'var(--border-color)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
+                />
               </div>
-              
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  {editingShift && (
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={handleDelete}
-                      style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              {showDrop && filtered.length > 0 && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', boxShadow: '0 8px 24px rgba(0,0,0,0.13)', zIndex: 10, maxHeight: '190px', overflowY: 'auto' }}>
+                  {filtered.map(c => (
+                    <div
+                      key={c.id}
+                      onMouseDown={(e) => { e.preventDefault(); pickCommessa(c) }}
+                      style={{ padding: '7px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--border-color)', background: selCommessa?.id === c.id ? 'var(--primary-light)' : 'transparent' }}
+                      className="pop-opt"
                     >
-                      <Trash2 size={13} />
-                      <span>Rimuovi</span>
+                      <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-primary)' }}>{c.code} — {c.label}</div>
+                        <div style={{ fontSize: '0.63rem', color: 'var(--text-secondary)' }}>{c.client}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Preset chips */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '5px', letterSpacing: '0.04em' }}>TURNO</div>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                {PRESETS.map(p => {
+                  const active = selType === p.type
+                  return (
+                    <button
+                      key={p.type}
+                      onClick={() => pickPreset(p)}
+                      style={{ flex: 1, padding: '6px 3px', border: `1.5px solid ${active ? p.color : 'var(--border-color)'}`, borderRadius: 'var(--radius-sm)', background: active ? `${p.color}18` : 'transparent', color: active ? p.color : 'var(--text-secondary)', fontWeight: 800, fontSize: '0.73rem', cursor: 'pointer', lineHeight: 1.3 }}
+                    >
+                      {p.short}
+                      <br />
+                      <span style={{ fontWeight: 400, fontSize: '0.59rem', display: 'block' }}>{p.start || '—'}</span>
                     </button>
-                  )}
-                </div>
-                
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
-                    Annulla
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Salva Turno
-                  </button>
-                </div>
+                  )
+                })}
               </div>
-            </form>
+            </div>
+
+            {/* Time inputs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+              {[['INIZIO', selStart, setSelStart], ['FINE', selEnd, setSelEnd]].map(([lbl, val, setter]) => (
+                <div key={lbl} style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.63rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '3px' }}>{lbl}</div>
+                  <input
+                    type="time"
+                    value={val}
+                    onChange={e => setter(e.target.value)}
+                    disabled={selType !== 'Custom'}
+                    style={{ width: '100%', padding: '6px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '0.8rem', opacity: selType !== 'Custom' ? 0.5 : 1 }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {pop.editShift
+                ? <button onClick={deletePop} style={{ padding: '7px 11px', background: 'var(--danger-light)', color: 'var(--danger)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}><Trash2 size={12} />Elimina</button>
+                : <div />
+              }
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={closePop} style={{ padding: '7px 12px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Annulla</button>
+                <button onClick={savePop} style={{ padding: '7px 16px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800 }}>Salva</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Styled JSX for cell-add-btn and cell hover actions */}
+      {/* ══════════════════════════════════
+          COPY PANEL — tasto destro
+      ══════════════════════════════════ */}
+      {copyPanel && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}
+          onClick={() => setCopyPanel(null)}
+        >
+          <div
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', width: '290px', boxShadow: '0 24px 64px rgba(0,0,0,0.22)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 800, fontSize: '0.88rem', marginBottom: '3px' }}>Copia turno su altri giorni</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+              Seleziona i giorni in cui replicare&nbsp;
+              <strong>{getCommessa(copyPanel.shift.commessa_id)?.code || copyPanel.shift.shift_type}</strong>
+            </div>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {weekStrs.map((dateStr, i) => {
+                const isSrc = dateStr === copyPanel.shift.shift_date
+                const sel = copyPanel.days.has(dateStr)
+                return (
+                  <button
+                    key={dateStr}
+                    disabled={isSrc}
+                    onClick={() => toggleDay(dateStr)}
+                    style={{ padding: '6px 8px', borderRadius: 'var(--radius-sm)', fontWeight: 700, fontSize: '0.73rem', cursor: isSrc ? 'default' : 'pointer', border: `1.5px solid ${sel ? 'var(--primary)' : 'var(--border-color)'}`, background: isSrc ? 'rgba(0,0,0,0.04)' : sel ? 'var(--primary-light)' : 'transparent', color: isSrc ? 'var(--text-muted)' : sel ? 'var(--primary)' : 'var(--text-primary)', opacity: isSrc ? 0.4 : 1, lineHeight: 1.3 }}
+                  >
+                    {DAYS[i]}<br />
+                    <span style={{ fontWeight: 400, fontSize: '0.62rem' }}>{weekDates[i].toLocaleDateString('it-IT', { day: 'numeric', month: 'numeric' })}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '7px' }}>
+              <button onClick={() => setCopyPanel(null)} style={{ padding: '7px 13px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Annulla</button>
+              <button
+                onClick={confirmCopy}
+                disabled={copyPanel.days.size === 0}
+                style={{ padding: '7px 15px', background: copyPanel.days.size === 0 ? '#ccc' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', cursor: copyPanel.days.size === 0 ? 'default' : 'pointer', fontSize: '0.75rem', fontWeight: 800 }}
+              >
+                {copyPanel.days.size > 0 ? `Copia su ${copyPanel.days.size} giorn${copyPanel.days.size === 1 ? 'o' : 'i'}` : 'Seleziona giorni'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
-        .shift-grid-cell:hover .cell-add-btn {
-          opacity: 1 !important;
-        }
-        .shift-grid-cell {
-          transition: background 0.1s ease;
-        }
-        .shift-grid-cell:hover {
-          background: rgba(0, 0, 0, 0.02) !important;
-        }
+        td:hover .cell-hint { opacity: 1 !important; }
+        .pop-opt:hover { background: rgba(168,34,56,0.05) !important; }
       `}</style>
     </div>
   )

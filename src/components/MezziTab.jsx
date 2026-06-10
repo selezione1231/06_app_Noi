@@ -382,8 +382,8 @@ export default function MezziTab({
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', minHeight: 'calc(100vh - 120px)' }}>
       {/* Header Tab */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+        <div style={{ flex: '1 1 240px' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Car size={24} style={{ color: 'var(--primary)' }} />
             <span>Modulo Mezzi & Tracciamento Consumi</span>

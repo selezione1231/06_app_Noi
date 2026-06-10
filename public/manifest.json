@@ -1,0 +1,40 @@
+{
+  "name": "Todos Select Suite",
+  "short_name": "Todos Hub",
+  "description": "ATS & HRIS integrato per il gruppo Todos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#A82238",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/todos-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/todos-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "it-IT",
+  "shortcuts": [
+    {
+      "name": "Dipendenti",
+      "short_name": "Dipendenti",
+      "url": "/?goto=employees",
+      "description": "Anagrafica dipendenti"
+    },
+    {
+      "name": "Timbrature",
+      "short_name": "Timbrature",
+      "url": "/?goto=clockin",
+      "description": "Clock-in / Clock-out"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ lerna-debug.log*
 # File di sistema e IDE
 .DS_Store
 .vscode/
+.claude/
 .idea/
 *.suo
 *.ntvs*

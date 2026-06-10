@@ -563,6 +563,90 @@ input, textarea, select, button {
   .todos-hub-desktop-header  { display: none !important; }
 }
 
+/* ============================================================================
+   MODULE PAGES — utility responsive condivise dai moduli Hub
+   ============================================================================ */
+
+.module-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tab bar dei moduli: pillole scrollabili orizzontalmente su mobile */
+.module-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+}
+
+/* Griglia KPI: si adatta da 5 colonne desktop a 2 su telefono */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+/* Griglia card (squadre, fornitori, ecc.) */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+}
+
+/* Griglia form nei modali */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+/* Wrapper per tabelle larghe: scroll orizzontale invece di overflow */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+@media (max-width: 768px) {
+  .module-page { padding: 14px 12px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+
+  /* Le tabelle legacy diventano scrollabili orizzontalmente */
+  .compact-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modali quasi-fullscreen su telefono */
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .modal-overlay { align-items: stretch; }
+
+  /* Header moduli più compatto */
+  .module-header h1 { font-size: 1.15rem !important; }
+}
+
 /* Desktop: nascondi bottom nav, mostra header desktop */
 @media (min-width: 769px) {
   .todos-hub-sidebar-desktop { display: flex !important; }

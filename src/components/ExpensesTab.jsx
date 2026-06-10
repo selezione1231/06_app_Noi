@@ -179,8 +179,8 @@ export default function ExpensesTab({
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
       {/* Intestazione */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ flex: '1 1 240px' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.02em', margin: 0 }}>
             💼 Gestione Note Spese & Rimborsi
           </h2>
