@@ -267,6 +267,78 @@ export function ImportButton({ onImport, mapRow, label = 'Importa XLSX', confirm
   )
 }
 
+// --- Firma touch -------------------------------------------------------------
+// Canvas per firma a mano (touch + mouse). onChange riceve il dataURL PNG
+// della firma (o null dopo "Cancella"). Riusato da rapportini e verbali DPI.
+export function SignaturePad({ onChange, height = 160 }) {
+  const canvasRef = useRef(null)
+  const drawing = useRef(false)
+  const last = useRef(null)
+  const [hasInk, setHasInk] = useState(false)
+
+  useEffect(() => {
+    const ctx = canvasRef.current.getContext('2d')
+    ctx.lineWidth = 2.4
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.strokeStyle = '#1e293b'
+  }, [])
+
+  const getPos = (e) => {
+    const cv = canvasRef.current
+    const r = cv.getBoundingClientRect()
+    const t = e.touches?.[0] || e
+    return { x: (t.clientX - r.left) * (cv.width / r.width), y: (t.clientY - r.top) * (cv.height / r.height) }
+  }
+  const start = (e) => { drawing.current = true; last.current = getPos(e) }
+  const move = (e) => {
+    if (!drawing.current) return
+    e.preventDefault()
+    const p = getPos(e)
+    const ctx = canvasRef.current.getContext('2d')
+    ctx.beginPath(); ctx.moveTo(last.current.x, last.current.y); ctx.lineTo(p.x, p.y); ctx.stroke()
+    last.current = p
+  }
+  const end = () => {
+    if (!drawing.current) return
+    drawing.current = false
+    setHasInk(true)
+    onChange?.(canvasRef.current.toDataURL('image/png'))
+  }
+  const clear = () => {
+    const cv = canvasRef.current
+    cv.getContext('2d').clearRect(0, 0, cv.width, cv.height)
+    setHasInk(false)
+    onChange?.(null)
+  }
+
+  return (
+    <div>
+      <canvas
+        ref={canvasRef}
+        width={600}
+        height={Math.round(height * (600 / 340))}
+        onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+        onTouchStart={start} onTouchMove={move} onTouchEnd={end}
+        style={{
+          width: '100%', height: `${height}px`, touchAction: 'none', display: 'block',
+          background: 'var(--bg-app, #f8fafc)', border: '1.5px dashed var(--border-color)',
+          borderRadius: '10px', cursor: 'crosshair'
+        }}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+          {hasInk ? '✓ Firma acquisita' : '✍️ Firma qui sopra (dito o mouse)'}
+        </span>
+        <button type="button" className="btn btn-secondary" onClick={clear}
+          style={{ padding: '4px 10px', fontSize: '0.72rem' }}>
+          Cancella firma
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // TableWrap: se riceve exportRows/exportName mostra la barra con il pulsante
 // "Esporta XLSX" sopra la tabella; extraActions aggiunge altri pulsanti
 // (es. ImportButton) nella stessa barra.

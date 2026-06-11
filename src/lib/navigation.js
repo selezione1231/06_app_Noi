@@ -126,6 +126,7 @@ export const NAV_TREE = [
         id: 'ops-commesse',
         label: 'Commesse & Costing',
         items: [
+          { id: 'ops-rapportini',  label: 'Rapportini cantiere', icon: ClipboardList, roles: [ROLES.PM, ROLES.NETIMPL, ROLES.TEAM_LEADER, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'rapportini' },
           { id: 'ops-job-costing', label: 'Job costing',      icon: LineChart,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.FINANCE, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'job-costing' }
         ]
       }

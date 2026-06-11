@@ -28,6 +28,7 @@ import ReportsHub from './components/reports/ReportsHub'
 import TimbratureAdmin from './components/workpro/pm/TimbratureAdmin'
 import SquadreModule from './components/operations/SquadreModule'
 import JobCostingModule from './components/operations/JobCostingModule'
+import RapportiniModule from './components/operations/RapportiniModule'
 import OrgChartModule from './components/hr/OrgChartModule'
 import SkillMatrixModule from './components/hr/SkillMatrixModule'
 import AssetSGModule from './components/asset/AssetSGModule'
@@ -725,7 +726,7 @@ export default function App() {
       'home', 'audit-log',
       'documenti', 'hse', 'formazione', 'offboarding',
       'reports', 'ai-copilot', 'timbrature-admin',
-      'squadre', 'job-costing', 'organigramma', 'skill-matrix'
+      'squadre', 'rapportini', 'job-costing', 'organigramma', 'skill-matrix'
     ])
     if (navTab && (
       newTabs.has(navTab) ||
@@ -2609,6 +2610,8 @@ export default function App() {
               <TimbratureAdmin />
             ) : navTab === 'squadre' ? (
               <SquadreModule />
+            ) : navTab === 'rapportini' ? (
+              <RapportiniModule user={user} />
             ) : navTab === 'job-costing' ? (
               <JobCostingModule />
             ) : navTab === 'organigramma' ? (
