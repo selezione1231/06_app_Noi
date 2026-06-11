@@ -3,6 +3,7 @@ import {
   FileText, Upload, Download, Trash2, Search, Filter,
   FileCheck, AlertTriangle, Clock, Plus, Eye, Tag, Users
 } from 'lucide-react'
+import { useSharedState } from '../shared/ui'
 
 // ============================================================================
 // DocumentiModule — gestione documenti e contratti HR
@@ -42,17 +43,6 @@ const INITIAL_DOCS = [
   { id: 'doc-8', employee_id: 'demo-emp-3', employee_name: 'Alessandro Neri', category: 'Documento Identità', title: "Carta d'identità - A. Neri", file_name: 'ci_neri.jpg', size_kb: 175, uploaded_at: '2023-03-10', expiry_date: '2026-06-15', tags: [], notes: 'IN SCADENZA' }
 ]
 
-function loadDocs() {
-  try {
-    const raw = localStorage.getItem(LS_KEY)
-    return raw ? JSON.parse(raw) : INITIAL_DOCS
-  } catch { return INITIAL_DOCS }
-}
-
-function saveDocs(docs) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(docs)) } catch { /* no-op */ }
-}
-
 function getDocStatus(expiry_date) {
   if (!expiry_date) return 'valido'
   const today = new Date()
@@ -70,7 +60,7 @@ const STATUS_CFG = {
 }
 
 export default function DocumentiModule({ userRoles = [] }) {
-  const [docs, setDocs] = useState(loadDocs)
+  const [docs, setDocs] = useSharedState(LS_KEY, INITIAL_DOCS)
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('Tutte')
   const [filterEmp, setFilterEmp] = useState('Tutti')
@@ -121,7 +111,6 @@ export default function DocumentiModule({ userRoles = [] }) {
     }
     const updated = [newDoc, ...docs]
     setDocs(updated)
-    saveDocs(updated)
     setShowAdd(false)
     setForm({ employee_id: '', category: 'Contratto', title: '', file_name: '', expiry_date: '', tags: '', notes: '' })
   }
@@ -130,7 +119,6 @@ export default function DocumentiModule({ userRoles = [] }) {
     if (!window.confirm('Eliminare questo documento?')) return
     const updated = docs.filter(d => d.id !== id)
     setDocs(updated)
-    saveDocs(updated)
   }
 
   const inputStyle = {

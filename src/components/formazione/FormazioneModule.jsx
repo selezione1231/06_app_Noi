@@ -4,6 +4,7 @@ import {
   AlertTriangle, Plus, Users, Calendar, Filter, ChevronRight,
   FileText, Star, BarChart3
 } from 'lucide-react'
+import { useSharedState } from '../shared/ui'
 
 // ============================================================================
 // FormazioneModule — LMS leggero per gestione corsi e certificazioni
@@ -50,13 +51,6 @@ const INITIAL_CERTS = [
   { id: 'cert-5', employee_id: 'demo-emp-1', course_id: 'c-3', issued_date: '2023-09-10', expiry_date: '2026-09-10', score: '92/100', notes: 'Eccellente' }
 ]
 
-function loadFromLS(key, def) {
-  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : def } catch { return def }
-}
-function saveToLS(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)) } catch { /* no-op */ }
-}
-
 function getExpiryStatus(dateStr) {
   if (!dateStr) return 'valido'
   const days = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24))
@@ -89,8 +83,8 @@ const TABS = [
 
 export default function FormazioneModule() {
   const [activeTab, setActiveTab] = useState('catalog')
-  const [piani, setPiani] = useState(() => loadFromLS(LS_PIANI, INITIAL_PIANI))
-  const [certs, setCerts] = useState(() => loadFromLS(LS_CERTS, INITIAL_CERTS))
+  const [piani, setPiani] = useSharedState(LS_PIANI, INITIAL_PIANI)
+  const [certs, setCerts] = useSharedState(LS_CERTS, INITIAL_CERTS)
   const [filterCat, setFilterCat] = useState('Tutte')
   const [showPianoForm, setShowPianoForm] = useState(false)
   const [pianoForm, setPianoForm] = useState({ employee_id: '', course_id: '', planned_date: '', notes: '' })
@@ -107,7 +101,6 @@ export default function FormazioneModule() {
     const newPiano = { ...pianoForm, id: 'p-' + Date.now(), status: 'Pianificato', completed_date: null }
     const updated = [newPiano, ...piani]
     setPiani(updated)
-    saveToLS(LS_PIANI, updated)
     setShowPianoForm(false)
     setPianoForm({ employee_id: '', course_id: '', planned_date: '', notes: '' })
   }
@@ -118,7 +111,6 @@ export default function FormazioneModule() {
       : p
     )
     setPiani(updated)
-    saveToLS(LS_PIANI, updated)
   }
 
   const overview = useMemo(() => {

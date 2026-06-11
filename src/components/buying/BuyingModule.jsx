@@ -6,7 +6,7 @@ import {
 import {
   ModulePage, ModuleHeader, TabBar, StatGrid, Card, TableWrap, THead, tdStyle,
   Pill, ExpiryPill, ProgressBar, EmptyState, Modal, Field, inputStyle, selectStyle,
-  useLocalState, fmtEuro, fmtDate, expiryInfo, ExportButton
+  useSharedState, fmtEuro, fmtDate, expiryInfo, ExportButton
 } from '../shared/ui'
 
 // ============================================================================
@@ -92,12 +92,12 @@ export default function BuyingModule({ view = 'suppliers' }) {
   const [tab, setTab] = useState(view)
   useEffect(() => { setTab(view) }, [view])
 
-  const [suppliers] = useLocalState('todos-buy-suppliers', INITIAL_SUPPLIERS)
-  const [listini] = useLocalState('todos-buy-listini', INITIAL_LISTINI)
-  const [accordi] = useLocalState('todos-buy-accordi', INITIAL_ACCORDI)
-  const [rda, setRda] = useLocalState('todos-buy-rda', INITIAL_RDA)
-  const [orders] = useLocalState('todos-buy-orders', INITIAL_ORDERS)
-  const [invoices] = useLocalState('todos-buy-invoices', INITIAL_INVOICES)
+  const [suppliers] = useSharedState('todos-buy-suppliers', INITIAL_SUPPLIERS)
+  const [listini] = useSharedState('todos-buy-listini', INITIAL_LISTINI)
+  const [accordi] = useSharedState('todos-buy-accordi', INITIAL_ACCORDI)
+  const [rda, setRda] = useSharedState('todos-buy-rda', INITIAL_RDA)
+  const [orders] = useSharedState('todos-buy-orders', INITIAL_ORDERS)
+  const [invoices] = useSharedState('todos-buy-invoices', INITIAL_INVOICES)
 
   const [rdaModalOpen, setRdaModalOpen] = useState(false)
   const [rdaForm, setRdaForm] = useState({ requester: '', dept: 'Operations', item: '', amount: '', cost_center: '' })

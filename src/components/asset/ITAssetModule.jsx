@@ -6,7 +6,7 @@ import {
 import {
   ModulePage, ModuleHeader, TabBar, StatGrid, Card, TableWrap, THead, tdStyle,
   Pill, ExpiryPill, ProgressBar, EmptyState, Modal, Field, inputStyle, selectStyle,
-  useLocalState, fmtEuro, fmtDate, expiryInfo
+  useSharedState, fmtEuro, fmtDate, expiryInfo
 } from '../shared/ui'
 
 // ============================================================================
@@ -80,11 +80,11 @@ export default function ITAssetModule({ view = 'devices' }) {
   const [tab, setTab] = useState(view)
   useEffect(() => { setTab(view) }, [view])
 
-  const [devices] = useLocalState('todos-it-devices', INITIAL_DEVICES)
-  const [network] = useLocalState('todos-it-network', INITIAL_NETWORK)
-  const [licenses] = useLocalState('todos-it-licenses', INITIAL_LICENSES)
-  const [accounts, setAccounts] = useLocalState('todos-it-accounts', INITIAL_ACCOUNTS)
-  const [tickets, setTickets] = useLocalState('todos-it-tickets', INITIAL_TICKETS)
+  const [devices] = useSharedState('todos-it-devices', INITIAL_DEVICES)
+  const [network] = useSharedState('todos-it-network', INITIAL_NETWORK)
+  const [licenses] = useSharedState('todos-it-licenses', INITIAL_LICENSES)
+  const [accounts, setAccounts] = useSharedState('todos-it-accounts', INITIAL_ACCOUNTS)
+  const [tickets, setTickets] = useSharedState('todos-it-tickets', INITIAL_TICKETS)
 
   const [ticketModalOpen, setTicketModalOpen] = useState(false)
   const [ticketForm, setTicketForm] = useState({ requester: '', subject: '', priority: 'Media' })

@@ -6,7 +6,7 @@ import {
 import {
   ModulePage, ModuleHeader, StatGrid, Card, TableWrap, THead, tdStyle, Pill,
   ProgressBar, EmptyState, Modal, Field, inputStyle, selectStyle,
-  useLocalState, fmtEuro
+  useSharedState, fmtEuro
 } from '../shared/ui'
 
 // ============================================================================
@@ -63,7 +63,7 @@ const marginOf = (j) => j.revenue - totCost(j.actual)
 const marginPct = (j) => (j.revenue > 0 ? (marginOf(j) / j.revenue) * 100 : 0)
 
 export default function JobCostingModule() {
-  const [jobs, setJobs] = useLocalState('todos-ops-jobcosting', INITIAL_JOBS)
+  const [jobs, setJobs] = useSharedState('todos-ops-jobcosting', INITIAL_JOBS)
   const [expandedId, setExpandedId] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)

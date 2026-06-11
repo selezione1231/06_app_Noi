@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Users2, Plus, HardHat, MapPin, Award, Pencil, Trash2, UserCircle2, CheckCircle2 } from 'lucide-react'
 import {
   ModulePage, ModuleHeader, StatGrid, Card, SectionTitle, Pill, EmptyState,
-  Modal, Field, inputStyle, selectStyle, useLocalState, ExportButton
+  Modal, Field, inputStyle, selectStyle, useSharedState, ExportButton
 } from '../shared/ui'
 
 // ============================================================================
@@ -51,7 +51,7 @@ const STATUS_CFG = {
 const EMPTY_FORM = { name: '', specialization: SPECIALIZZAZIONI[0], leader_id: OPERAI[0].id, member_ids: [], site: '— Nessuno —', status: 'Disponibile' }
 
 export default function SquadreModule() {
-  const [squads, setSquads] = useLocalState('todos-ops-squads', INITIAL_SQUADS)
+  const [squads, setSquads] = useSharedState('todos-ops-squads', INITIAL_SQUADS)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)

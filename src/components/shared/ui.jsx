@@ -9,6 +9,9 @@ import { X, Inbox, Download } from 'lucide-react'
 // così ogni modulo è automaticamente mobile-friendly.
 // ============================================================================
 
+// --- Persistenza condivisa (Supabase + cache localStorage + realtime) -------
+export { useSharedState } from '../../lib/sharedState'
+
 // --- Persistenza locale (stesso pattern di HSEModule) -----------------------
 export function useLocalState(key, initial) {
   const [state, setState] = useState(() => {

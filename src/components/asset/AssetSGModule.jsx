@@ -6,7 +6,7 @@ import {
 import {
   ModulePage, ModuleHeader, TabBar, StatGrid, Card, TableWrap, THead, tdStyle,
   Pill, ExpiryPill, ProgressBar, EmptyState, Modal, Field, inputStyle, selectStyle,
-  useLocalState, fmtEuro, fmtNum, fmtDate, expiryInfo, ExportButton
+  useSharedState, fmtEuro, fmtNum, fmtDate, expiryInfo, ExportButton
 } from '../shared/ui'
 
 // ============================================================================
@@ -81,10 +81,10 @@ export default function AssetSGModule({ view = 'fuel' }) {
   const [tab, setTab] = useState(view)
   useEffect(() => { setTab(view) }, [view])
 
-  const [fuel, setFuel] = useLocalState('todos-asset-fuel', INITIAL_FUEL)
-  const [sites] = useLocalState('todos-asset-sites', INITIAL_SITES)
-  const [equipment, setEquipment] = useLocalState('todos-asset-equipment', INITIAL_EQUIPMENT)
-  const [inventory, setInventory] = useLocalState('todos-asset-inventory', INITIAL_INVENTORY)
+  const [fuel, setFuel] = useSharedState('todos-asset-fuel', INITIAL_FUEL)
+  const [sites] = useSharedState('todos-asset-sites', INITIAL_SITES)
+  const [equipment, setEquipment] = useSharedState('todos-asset-equipment', INITIAL_EQUIPMENT)
+  const [inventory, setInventory] = useSharedState('todos-asset-inventory', INITIAL_INVENTORY)
 
   // --- Fuel ---------------------------------------------------------------
   const [fuelModalOpen, setFuelModalOpen] = useState(false)

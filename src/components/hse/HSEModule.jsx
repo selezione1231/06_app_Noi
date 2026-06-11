@@ -4,7 +4,7 @@ import {
   CheckCircle2, Clock, XCircle, Plus, ChevronRight, Users,
   Package, Wrench, Activity
 } from 'lucide-react'
-import { ExportButton } from '../shared/ui'
+import { ExportButton, useSharedState } from '../shared/ui'
 
 // ============================================================================
 // HSEModule — Health, Safety & Environment
@@ -46,13 +46,6 @@ const INITIAL_INCIDENTS = [
   { id: 'inc-2', date: '2026-05-22', type: 'Infortunio', severity: 'Media', location: 'Magazzino Milano', description: 'Contusione al piede sinistro durante carico materiali. Prognosi 5 giorni.', employee_involved: 'Roberto Corleto', corrective_action: 'Revisione procedura carico/scarico. DPI obbligatorio per tutti.', status: 'Aperto' },
   { id: 'inc-3', date: '2026-06-01', type: 'Near Miss', severity: 'Alta', location: 'Cantiere BS25124', description: 'Cavo elettrico non protetto trovato in zona di lavoro. Nessun contatto.', employee_involved: 'Luca Testa', corrective_action: 'Ispezione elettrica urgente ordinata. Area temporaneamente chiusa.', status: 'In lavorazione' }
 ]
-
-function loadFromLS(key, defaultVal) {
-  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : defaultVal } catch { return defaultVal }
-}
-function saveToLS(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)) } catch { /* no-op */ }
-}
 
 function getDaysUntil(dateStr) {
   if (!dateStr) return null
@@ -103,8 +96,8 @@ const CERTIFICATIONS = [
 export default function HSEModule({ view = 'dashboard' }) {
   const [activeTab, setActiveTab] = useState(view)
   useEffect(() => { setActiveTab(view) }, [view])
-  const [dpiAssignments, setDpiAssignments] = useState(() => loadFromLS(LS_DPI, INITIAL_DPI_ASSIGNMENTS))
-  const [incidents, setIncidents] = useState(() => loadFromLS(LS_INCIDENTS, INITIAL_INCIDENTS))
+  const [dpiAssignments, setDpiAssignments] = useSharedState(LS_DPI, INITIAL_DPI_ASSIGNMENTS)
+  const [incidents, setIncidents] = useSharedState(LS_INCIDENTS, INITIAL_INCIDENTS)
   const [showIncidentForm, setShowIncidentForm] = useState(false)
   const [incidentForm, setIncidentForm] = useState({ date: '', type: 'Near Miss', severity: 'Bassa', location: '', description: '', employee_involved: '', corrective_action: '' })
 
@@ -122,7 +115,6 @@ export default function HSEModule({ view = 'dashboard' }) {
     const newInc = { ...incidentForm, id: 'inc-' + Date.now(), status: 'Aperto' }
     const updated = [newInc, ...incidents]
     setIncidents(updated)
-    saveToLS(LS_INCIDENTS, updated)
     setShowIncidentForm(false)
     setIncidentForm({ date: '', type: 'Near Miss', severity: 'Bassa', location: '', description: '', employee_involved: '', corrective_action: '' })
   }

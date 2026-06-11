@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Award, AlertTriangle, Users2, Target, Info } from 'lucide-react'
 import {
   ModulePage, ModuleHeader, StatGrid, Card, TableWrap, thStyle, tdStyle,
-  Pill, useLocalState, selectStyle, ExportButton
+  Pill, useSharedState, selectStyle, ExportButton
 } from '../shared/ui'
 
 // ============================================================================
@@ -54,7 +54,7 @@ const INITIAL_MATRIX = {
 }
 
 export default function SkillMatrixModule() {
-  const [matrix, setMatrix] = useLocalState('todos-hr-skillmatrix', INITIAL_MATRIX)
+  const [matrix, setMatrix] = useSharedState('todos-hr-skillmatrix', INITIAL_MATRIX)
   const [deptFilter, setDeptFilter] = useState('Tutti')
   const [catFilter, setCatFilter] = useState('Tutte')
 

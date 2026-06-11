@@ -4,6 +4,7 @@ import {
   Plus, ChevronDown, ChevronRight, Trash2, Calendar, Users,
   Laptop, Car, CreditCard, KeyRound, FileText, Package
 } from 'lucide-react'
+import { useSharedState } from '../shared/ui'
 
 // ============================================================================
 // OffboardingModule — gestione uscita strutturata dei dipendenti
@@ -74,15 +75,8 @@ const INITIAL_OFFBOARDINGS = [
   }
 ]
 
-function loadFromLS() {
-  try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : INITIAL_OFFBOARDINGS } catch { return INITIAL_OFFBOARDINGS }
-}
-function saveToLS(val) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(val)) } catch { /* no-op */ }
-}
-
 export default function OffboardingModule() {
-  const [offboardings, setOffboardings] = useState(loadFromLS)
+  const [offboardings, setOffboardings] = useSharedState(LS_KEY, INITIAL_OFFBOARDINGS)
   const [selectedId, setSelectedId] = useState(offboardings[0]?.id || null)
   const [showNew, setShowNew] = useState(false)
   const [newForm, setNewForm] = useState({ employee_id: '', termination_date: '', reason: '' })
@@ -111,7 +105,6 @@ export default function OffboardingModule() {
       }
     })
     setOffboardings(updated)
-    saveToLS(updated)
   }
 
   const handleCreateOffboarding = () => {
@@ -133,7 +126,6 @@ export default function OffboardingModule() {
     }
     const updated = [newOb, ...offboardings]
     setOffboardings(updated)
-    saveToLS(updated)
     setSelectedId(newOb.id)
     setShowNew(false)
     setNewForm({ employee_id: '', termination_date: '', reason: '' })
