@@ -62,8 +62,13 @@ const generateContentWithFallback = async (prompt, responseMimeType = "applicati
     } catch (err) {
       console.warn(`Modello ${modelName} fallito o non supportato:`, err.message);
       lastError = err;
-      // Se l'errore è 404 o correlato a "not found for API version", continuiamo col prossimo modello
-      if (err.message.includes("not found") || err.message.includes("404") || err.message.includes("supported")) {
+      // Se l'errore è 404 ("not found"), modello non supportato, oppure il
+      // modello è momentaneamente sovraccarico (503), proviamo il prossimo
+      if (
+        err.message.includes("not found") || err.message.includes("404") || err.message.includes("supported") ||
+        err.message.includes("503") || err.message.includes("overloaded") || err.message.includes("high demand") ||
+        err.message.includes("429") || err.message.includes("quota")
+      ) {
         continue;
       }
       // Per altri tipi di errori gravi (es. chiave API errata), interrompiamo subito
@@ -346,6 +351,33 @@ ${invoiceText}
     return mockExtractFuelTransactions(invoiceText);
   }
 };
+
+/**
+ * OCR attestati di formazione: dalla foto/scansione estrae corso, ente,
+ * intestatario e date (rilascio + scadenza). imageBase64 = solo i dati
+ * base64, senza il prefisso "data:image/...;base64,".
+ */
+export const extractCertificateInfo = async (imageBase64, mimeType = 'image/jpeg') => {
+  if (!isGeminiConfigured) {
+    throw new Error('Chiave API Gemini non configurata: impossibile leggere l\'attestato.')
+  }
+  const prompt = [
+    `Analizza l'immagine: è un attestato/certificato di formazione italiano (es. corso sicurezza D.Lgs. 81/08, PLE, primo soccorso, antincendio).
+Estrai i dati ESCLUSIVAMENTE nel formato JSON seguente, senza commenti:
+{
+  "corso": "titolo del corso (stringa, obbligatorio)",
+  "intestatario": "nome e cognome della persona (o null)",
+  "ente": "ente/organizzazione che ha rilasciato l'attestato (o null)",
+  "data_rilascio": "YYYY-MM-DD (o null)",
+  "data_scadenza": "YYYY-MM-DD (o null)",
+  "validita_anni": numero di anni di validità se indicato (o null)
+}
+Se la data di scadenza non è scritta ma sono indicati data di rilascio e anni di validità, calcola data_scadenza = data_rilascio + validita_anni. Le date italiane (gg/mm/aaaa) vanno convertite in YYYY-MM-DD.`,
+    { inlineData: { mimeType, data: imageBase64 } }
+  ]
+  const textResponse = await generateContentWithFallback(prompt, 'application/json')
+  return parseGeminiJson(textResponse)
+}
 
 function mockExtractFuelTransactions(invoiceText) {
   // Genera un set di transazioni fittizie ma realistiche, associate alle carte carburante dei nostri dipendenti

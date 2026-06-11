@@ -5,6 +5,7 @@ import {
   FileText, Star, BarChart3
 } from 'lucide-react'
 import { useSharedState } from '../shared/ui'
+import { extractCertificateInfo } from '../../utils/gemini'
 
 // ============================================================================
 // FormazioneModule — LMS leggero per gestione corsi e certificazioni
@@ -88,6 +89,75 @@ export default function FormazioneModule() {
   const [filterCat, setFilterCat] = useState('Tutte')
   const [showPianoForm, setShowPianoForm] = useState(false)
   const [pianoForm, setPianoForm] = useState({ employee_id: '', course_id: '', planned_date: '', notes: '' })
+  // OCR attestati (Gemini vision)
+  const [ocrBusy, setOcrBusy] = useState(false)
+  const [ocrForm, setOcrForm] = useState(null) // { employee_id, course_title, issued_date, expiry_date, ente }
+
+  // Foto/scansione attestato → Gemini → form di conferma precompilato
+  const handleOcrFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setOcrBusy(true)
+    try {
+      // ridimensiona per contenere il payload (max 1280px, JPEG 80%)
+      const dataUrl = await new Promise((res, rej) => {
+        const reader = new FileReader()
+        reader.onerror = () => rej(new Error('Lettura file fallita'))
+        reader.onload = () => {
+          const img = new Image()
+          img.onerror = () => rej(new Error('Immagine non valida'))
+          img.onload = () => {
+            const scale = Math.min(1, 1280 / Math.max(img.width, img.height))
+            const cv = document.createElement('canvas')
+            cv.width = Math.round(img.width * scale)
+            cv.height = Math.round(img.height * scale)
+            cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height)
+            res(cv.toDataURL('image/jpeg', 0.8))
+          }
+          img.src = reader.result
+        }
+        reader.readAsDataURL(file)
+      })
+      const base64 = dataUrl.split(',')[1]
+      const info = await extractCertificateInfo(base64, 'image/jpeg')
+      // match best-effort dell'intestatario sui dipendenti
+      const matchEmp = EMPLOYEES.find(emp => {
+        const who = (info.intestatario || '').toLowerCase()
+        return who && emp.name.toLowerCase().split(' ').every(part => who.includes(part))
+      })
+      setOcrForm({
+        employee_id: matchEmp?.id || '',
+        course_title: info.corso || '',
+        issued_date: info.data_rilascio || '',
+        expiry_date: info.data_scadenza || '',
+        ente: info.ente || '',
+        intestatario: info.intestatario || ''
+      })
+    } catch (err) {
+      alert("Lettura attestato fallita: " + err.message)
+    } finally {
+      setOcrBusy(false)
+    }
+  }
+
+  const confirmOcrCert = () => {
+    if (!ocrForm.employee_id) { alert('Seleziona il dipendente.'); return }
+    if (!ocrForm.course_title) { alert('Indica il titolo del corso.'); return }
+    const newCert = {
+      id: 'cert-ocr-' + Date.now(),
+      employee_id: ocrForm.employee_id,
+      course_id: null,
+      course_title: ocrForm.course_title,
+      issued_date: ocrForm.issued_date || null,
+      expiry_date: ocrForm.expiry_date || null,
+      score: null,
+      notes: ocrForm.ente ? `Ente: ${ocrForm.ente} (da OCR)` : 'Inserito da OCR'
+    }
+    setCerts([newCert, ...certs])
+    setOcrForm(null)
+    setActiveTab('certs')
+  }
 
   const getCourseName = (id) => CATALOG.find(c => c.id === id)?.title || id
   const getEmpName = (id) => EMPLOYEES.find(e => e.id === id)?.name || id
@@ -285,6 +355,12 @@ export default function FormazioneModule() {
       {/* ===== CERTIFICAZIONI ===== */}
       {activeTab === 'certs' && (
         <div style={{ background: 'white', border: '1px solid var(--border-color, #e2e8f0)', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 10px', borderBottom: '1px solid #e2e8f0' }}>
+            <label className="btn btn-secondary" style={{ padding: '5px 12px', fontSize: '0.75rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: ocrBusy ? 0.6 : 1 }}>
+              📷 {ocrBusy ? 'Lettura attestato in corso…' : 'Carica attestato (OCR AI)'}
+              <input type="file" accept="image/*" capture="environment" onChange={handleOcrFile} disabled={ocrBusy} style={{ display: 'none' }} />
+            </label>
+          </div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr style={{ background: '#f8fafc' }}>
               {['Dipendente', 'Corso / Certificazione', 'Emesso il', 'Scadenza', 'Voto/Esito', 'Stato'].map(h => (
@@ -299,7 +375,7 @@ export default function FormazioneModule() {
                   <tr key={cert.id} style={{ borderBottom: idx < certs.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                     <td style={{ padding: '11px 14px', fontWeight: 600, fontSize: '0.83rem' }}>{getEmpName(cert.employee_id)}</td>
                     <td style={{ padding: '11px 14px', fontSize: '0.82rem', color: 'var(--text-secondary, #475569)', maxWidth: 220 }}>
-                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getCourseName(cert.course_id)}</div>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cert.course_title || getCourseName(cert.course_id)}</div>
                     </td>
                     <td style={{ padding: '11px 14px', fontSize: '0.8rem', color: '#64748b' }}>{cert.issued_date}</td>
                     <td style={{ padding: '11px 14px', fontSize: '0.8rem', color: '#64748b' }}>{cert.expiry_date || '—'}</td>
@@ -312,6 +388,50 @@ export default function FormazioneModule() {
               })}
             </tbody>
           </table>
+
+          {/* Modale conferma dati OCR */}
+          {ocrForm && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+                <h2 style={{ margin: '0 0 6px', fontSize: '1.1rem', fontWeight: 800 }}>📷 Dati letti dall'attestato</h2>
+                <p style={{ margin: '0 0 16px', fontSize: '0.76rem', color: '#64748b' }}>
+                  Controlla e correggi i dati estratti dall'AI prima di salvare.
+                  {ocrForm.intestatario && <> Intestatario letto: <strong>{ocrForm.intestatario}</strong></>}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Dipendente *</label>
+                    <select value={ocrForm.employee_id} onChange={e => setOcrForm(f => ({ ...f, employee_id: e.target.value }))} style={selectStyle}>
+                      <option value="">Seleziona...</option>
+                      {EMPLOYEES.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Corso / Certificazione *</label>
+                    <input value={ocrForm.course_title} onChange={e => setOcrForm(f => ({ ...f, course_title: e.target.value }))} style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Rilasciato il</label>
+                      <input type="date" value={ocrForm.issued_date} onChange={e => setOcrForm(f => ({ ...f, issued_date: e.target.value }))} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Scade il</label>
+                      <input type="date" value={ocrForm.expiry_date} onChange={e => setOcrForm(f => ({ ...f, expiry_date: e.target.value }))} style={inputStyle} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Ente formatore</label>
+                    <input value={ocrForm.ente} onChange={e => setOcrForm(f => ({ ...f, ente: e.target.value }))} style={inputStyle} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '18px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setOcrForm(null)} style={{ padding: '9px 18px', border: '1px solid var(--border-color, #e2e8f0)', borderRadius: '8px', background: 'white', cursor: 'pointer', fontWeight: 600 }}>Annulla</button>
+                  <button onClick={confirmOcrCert} style={{ padding: '9px 18px', border: 'none', borderRadius: '8px', background: 'var(--primary, #A82238)', color: 'white', cursor: 'pointer', fontWeight: 700 }}>Salva certificazione</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
