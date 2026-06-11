@@ -3,8 +3,9 @@ import { ChevronLeft, ChevronRight, Calendar as CalIcon, X, Search, Trash2 } fro
 import { WP_COLORS, wpButton, wpBadge } from '../shared/wpStyles'
 import {
   WP_EMPLOYEES, WP_SITES, WP_VEHICLES, WP_CLIENTS,
-  WP_ASSIGNMENTS, SPECIAL_LABELS
+  WP_ASSIGNMENTS, SPECIAL_LABELS, WP_LEAVE_REQUESTS, WP_EMP_CERTS
 } from '../shared/wpSeed'
+import { useSharedState } from '../../shared/ui'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WeeklyPlanner — pianificazione veloce: 2 click per assegnare
@@ -257,7 +258,8 @@ function CopyPanel({ cell, weekDates, weekStrs, onConfirm, onClose }) {
 // ─── main component ───────────────────────────────────────────────────────────
 export default function WeeklyPlanner({ pmId }) {
   const [weekStart, setWeekStart] = useState(() => getMonday())
-  const [assignments, setAssignments] = useState(WP_ASSIGNMENTS)
+  // Persistenza condivisa: la pianificazione è unica per tutta l'azienda (realtime)
+  const [assignments, setAssignments] = useSharedState('wp-weekly-assignments', WP_ASSIGNMENTS)
   const [pop, setPop]     = useState(null)   // { employeeId, date, assignment }
   const [copyCell, setCopyCell] = useState(null)
 
@@ -292,8 +294,58 @@ export default function WeeklyPlanner({ pmId }) {
     return `${s} → ${e}`
   }
 
+  // ── MOTORE CONFLITTI ───────────────────────────────────────────────────────
+  // Controlla un'assegnazione di cantiere prima di salvarla.
+  // blocks → assegnazione impedita | warns → richiesta conferma
+  const checkConflicts = useCallback((empId, date, data) => {
+    const blocks = [], warns = []
+    if (!data.site_id) return { blocks, warns }   // gli "speciali" non hanno vincoli
+    const emp = WP_EMPLOYEES.find(e => e.id === empId)
+    const fmtD = (d) => new Date(d + 'T12:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })
+
+    // 1) Ferie/permessi APPROVATI che coprono la data
+    const leave = WP_LEAVE_REQUESTS.find(l =>
+      l.employee_id === empId && l.status === 'Approved' && date >= l.date_from && date <= l.date_to
+    )
+    if (leave) blocks.push(`${emp?.name} ha ${leave.type} approvate dal ${fmtD(leave.date_from)} al ${fmtD(leave.date_to)}.`)
+
+    // 2) Giornata già pianificata come speciale (Ferie, Malattia, ecc.)
+    const existing = assignments.find(a => a.employee_id === empId && a.date === date)
+    if (existing?.special) {
+      const cfg = SPECIAL_LABELS[existing.special]
+      blocks.push(`${emp?.name} risulta "${cfg?.label || existing.special}" il ${fmtD(date)}.`)
+    }
+
+    // 3) Patentini / abilitazioni scaduti alla data dell'assegnazione
+    WP_EMP_CERTS
+      .filter(c => c.employee_id === empId && c.expiry < date)
+      .forEach(c => blocks.push(`Patentino "${c.name}" di ${emp?.name} scaduto il ${fmtD(c.expiry)}.`))
+
+    // 4) Già assegnato a un altro cantiere → sovrascrittura da confermare
+    if (existing?.site_id && existing.site_id !== data.site_id) {
+      const prevSite = WP_SITES.find(s => s.id === existing.site_id)
+      warns.push(`${emp?.name} è già assegnato a ${prevSite?.code || 'altro cantiere'} il ${fmtD(date)}: verrà sostituito.`)
+    }
+    return { blocks, warns }
+  }, [assignments])
+
+  // true = si può procedere, false = annullato/bloccato
+  const passesConflicts = useCallback((empId, date, data) => {
+    const { blocks, warns } = checkConflicts(empId, date, data)
+    if (blocks.length > 0) {
+      window.alert('⛔ Assegnazione bloccata:\n\n• ' + blocks.join('\n• ') +
+        '\n\nRimuovi prima il vincolo (ferie/patentino) per procedere.')
+      return false
+    }
+    if (warns.length > 0) {
+      return window.confirm('⚠️ Attenzione:\n\n• ' + warns.join('\n• ') + '\n\nProcedere comunque?')
+    }
+    return true
+  }, [checkConflicts])
+
   // ── CRUD ──────────────────────────────────────────────────────────────────
   const saveAssignment = (data) => {
+    if (!passesConflicts(data.employee_id, data.date, data)) return
     setAssignments(prev => {
       const idx = prev.findIndex(a => a.employee_id === data.employee_id && a.date === data.date)
       if (idx >= 0) return prev.map((a, i) => i === idx ? { ...a, ...data } : a)
@@ -310,9 +362,20 @@ export default function WeeklyPlanner({ pmId }) {
   const copyAssignment = (srcCell, targetDates) => {
     const src = srcCell.assignment
     if (!src) return
+    // Controlla i conflitti data per data: copia solo sui giorni senza blocchi
+    const okDates = [], blockedMsgs = []
+    targetDates.forEach(date => {
+      const { blocks } = checkConflicts(srcCell.employeeId, date, src)
+      if (blocks.length > 0) blockedMsgs.push(...blocks)
+      else okDates.push(date)
+    })
+    if (blockedMsgs.length > 0) {
+      window.alert('⛔ Alcuni giorni sono stati saltati:\n\n• ' + [...new Set(blockedMsgs)].join('\n• '))
+    }
+    if (okDates.length === 0) { setCopyCell(null); return }
     setAssignments(prev => {
       let next = [...prev]
-      targetDates.forEach(date => {
+      okDates.forEach(date => {
         const idx = next.findIndex(a => a.employee_id === srcCell.employeeId && a.date === date)
         const entry = { ...src, id: `a-${Date.now()}-${date}`, employee_id: srcCell.employeeId, date }
         if (idx >= 0) next = next.map((a, i) => i === idx ? entry : a)
@@ -338,6 +401,7 @@ export default function WeeklyPlanner({ pmId }) {
     if (!dragging) return
     if (dragging.empId === empId && dragging.date === date) { reset(); return }
     const data = { ...dragging.cell, employee_id: empId, date }
+    if (!passesConflicts(empId, date, data)) { reset(); return }
     // remove source, upsert target
     setAssignments(prev => {
       const without = prev.filter(a => !(a.employee_id === dragging.empId && a.date === dragging.date))
@@ -409,6 +473,15 @@ export default function WeeklyPlanner({ pmId }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     {emp.is_leader && <span style={{ background: WP_COLORS.info, color: 'white', fontSize: '0.58rem', fontWeight: 900, padding: '2px 4px', borderRadius: '3px' }}>CS</span>}
                     <span style={{ fontWeight: 600, fontSize: '0.8rem', color: emp.is_leader ? WP_COLORS.info : WP_COLORS.text }}>{emp.name}</span>
+                    {(() => {
+                      const expired = WP_EMP_CERTS.filter(c => c.employee_id === emp.id && c.expiry < todayStr)
+                      return expired.length > 0 ? (
+                        <span
+                          title={'Patentini scaduti:\n' + expired.map(c => `• ${c.name} (${c.expiry})`).join('\n')}
+                          style={{ background: '#fee2e2', color: '#dc2626', fontSize: '0.58rem', fontWeight: 900, padding: '2px 4px', borderRadius: '3px', cursor: 'help' }}
+                        >⚠ PAT.</span>
+                      ) : null
+                    })()}
                   </div>
                   <div style={{ fontSize: '0.65rem', color: WP_COLORS.textMuted }}>{emp.code}</div>
                 </td>

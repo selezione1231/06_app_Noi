@@ -189,6 +189,17 @@ export const WP_LEAVE_REQUESTS = [
   { id: 'lr-5', employee_id: 'wp-emp-12', type: 'Ferie',    date_from: W[3], date_to: W[6], full_day: true,  motivation: 'Vacanza',              status: 'Pending',  created_at: '2026-05-30', reason_type: null }
 ]
 
+// --- Abilitazioni / patentini operai (controllo conflitti nel planner) ---
+export const WP_EMP_CERTS = [
+  { employee_id: 'wp-emp-1', name: 'PLE — Piattaforme di Lavoro Elevabili', expiry: '2027-03-15' },
+  { employee_id: 'wp-emp-1', name: 'Lavori in quota + DPI III cat.',        expiry: '2026-11-20' },
+  { employee_id: 'wp-emp-2', name: 'PLE — Piattaforme di Lavoro Elevabili', expiry: '2026-05-30' },
+  { employee_id: 'wp-emp-3', name: 'Lavori in quota + DPI III cat.',        expiry: '2026-12-01' },
+  { employee_id: 'wp-emp-4', name: 'Preposto',                              expiry: '2027-01-10' },
+  { employee_id: 'wp-emp-5', name: 'PLE — Piattaforme di Lavoro Elevabili', expiry: '2027-06-30' },
+  { employee_id: 'wp-emp-6', name: 'Giunzione FO certificata',              expiry: '2026-04-12' }
+]
+
 // --- Note dei dipendenti (dall'APP) -------------------------------------
 export const WP_EMPLOYEE_NOTES = [
   { id: 'n-1', employee_id: 'wp-emp-3', text: 'Ducato cassonato GT408ML perde olio: serve controllo officina.', priority: 'high',   seen: false, created_at: '2026-05-30T08:14:00' },
