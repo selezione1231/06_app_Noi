@@ -53,3 +53,62 @@ export async function fetchContacts({ q = '', tipo = 'Tutti', includeUnused = fa
   }))
   return { rows, total: count ?? rows.length }
 }
+
+// Cache nomi (7 aziende e nomi cliente già risolti)
+let _companies = null
+const _contactNames = new Map()
+
+async function companyNames() {
+  if (_companies) return _companies
+  const { data } = await supabase.from('companies').select('legacy_id,name')
+  _companies = new Map((data || []).map(c => [c.legacy_id, c.name]))
+  return _companies
+}
+
+async function contactNames(ids) {
+  const missing = [...new Set(ids)].filter(id => id !== null && !_contactNames.has(id))
+  if (missing.length > 0) {
+    const { data } = await supabase.from('contacts').select('legacy_id,name').in('legacy_id', missing)
+    for (const c of (data || [])) _contactNames.set(c.legacy_id, c.name)
+  }
+  return _contactNames
+}
+
+/**
+ * Sottocommesse (tabella projects, ex TB_CANTIERI). 6k record, 611 aperte.
+ * @returns { rows, total }
+ */
+export async function fetchProjects({ q = '', soloManutenzione = false, includeClosed = false, limit = 300 } = {}) {
+  if (!isLegacyDataAvailable()) return null
+  let query = supabase
+    .from('projects')
+    .select('legacy_id,code,description,project_type,customer_legacy_id,company_legacy_id,hidden,unused,notes', { count: 'exact' })
+
+  if (!includeClosed) query = query.eq('hidden', false).eq('unused', false)
+  if (soloManutenzione) query = query.eq('project_type', 'MAN')
+  const s = q.trim().replace(/[%,()]/g, ' ')
+  if (s) query = query.or(`code.ilike.%${s}%,description.ilike.%${s}%`)
+
+  const { data, error, count } = await query.order('code').limit(limit)
+  if (error) {
+    console.warn('fetchProjects:', error.message)
+    return null
+  }
+  const [companies, clienti] = await Promise.all([
+    companyNames(),
+    contactNames((data || []).map(p => p.customer_legacy_id))
+  ])
+  const rows = (data || []).map(p => ({
+    id: p.legacy_id,
+    code: p.code || '—',
+    name: p.description || '',
+    client_name: clienti.get(p.customer_legacy_id) || '—',
+    company_name: companies.get(p.company_legacy_id) || '—',
+    type: p.project_type || '—',
+    is_maintenance: p.project_type === 'MAN',
+    hidden: p.hidden,
+    unused: p.unused,
+    notes: p.notes
+  }))
+  return { rows, total: count ?? rows.length }
+}

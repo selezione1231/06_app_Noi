@@ -108,7 +108,7 @@ export const NAV_TREE = [
         label: 'Anagrafiche',
         items: [
           { id: 'ops-clients',     label: 'Clienti',          icon: Briefcase,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.SALES, ROLES.ADMIN], tabId: 'wp2-clients' },
-          { id: 'ops-sites',       label: 'Cantieri',         icon: Building2,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.ADMIN], tabId: 'wp2-sites' },
+          { id: 'ops-sites',       label: 'Sottocommesse',    icon: Building2,   roles: [ROLES.PM, ROLES.NETIMPL, ROLES.ADMIN], tabId: 'wp2-sites' },
           { id: 'ops-squads',      label: 'Squadre',          icon: Users2,      roles: [ROLES.PM, ROLES.NETIMPL, ROLES.HR, ROLES.ADMIN], tabId: 'squadre' }
         ]
       },

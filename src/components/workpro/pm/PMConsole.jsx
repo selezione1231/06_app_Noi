@@ -51,7 +51,7 @@ export default function PMConsole({ pmId, onLogout }) {
     { id: 'notes',      label: 'Note Inserite',       icon: <MessageSquare size={28} />, badge: counts.notes, urgent: counts.notesHigh > 0 },
     { id: 'time',       label: 'Approva Inserimenti', icon: <CheckCircle2 size={28} />, badge: counts.timeEntries },
     { id: 'clients',    label: 'Clienti',             icon: <Briefcase size={28} />, badge: null },
-    { id: 'sites',      label: 'Cantieri',            icon: <Building2 size={28} />, badge: null },
+    { id: 'sites',      label: 'Sottocommesse',       icon: <Building2 size={28} />, badge: null },
     { id: 'employees',  label: 'Dipendenti',          icon: <Users size={28} />, badge: null },
     { id: 'vehicles',   label: 'Automezzi',           icon: <Car size={28} />, badge: null },
     { id: 'prints',     label: 'Stampe',              icon: <Printer size={28} />, badge: null },
