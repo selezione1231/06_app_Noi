@@ -22,7 +22,7 @@ import {
   Receipt, FileSpreadsheet, FileSearch, ShoppingCart, FileWarning,
   Wallet, BarChart3, LineChart, PieChart, Sparkles, Bot,
   Activity, AlertOctagon, Building, FolderArchive as ArchiveIcon,
-  FileCode, Video
+  FileCode, Video, DatabaseZap
 } from 'lucide-react'
 
 // --- Roles -------------------------------------------------------------------
@@ -270,7 +270,8 @@ export const NAV_TREE = [
           { id: 'ins-audit',         label: 'Storico modifiche', icon: Activity, roles: [ROLES.ADMIN, ROLES.HR, ROLES.DIREZIONE], tabId: 'audit-log' },
           { id: 'ins-exec',          label: 'Executive briefing', icon: Sparkles, roles: [ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ins-exec' },
           { id: 'ins-ai',            label: 'AI Copilot',       icon: Bot,       roles: [ROLES.HR, ROLES.PM, ROLES.DIREZIONE, ROLES.ADMIN], tabId: 'ai-copilot' },
-          { id: 'ins-reports',       label: 'Report & Stampe',  icon: FileText,  roles: [ROLES.HR, ROLES.PM, ROLES.FINANCE, ROLES.ADMIN], tabId: 'reports' }
+          { id: 'ins-reports',       label: 'Report & Stampe',  icon: FileText,  roles: [ROLES.HR, ROLES.PM, ROLES.FINANCE, ROLES.ADMIN], tabId: 'reports' },
+          { id: 'ins-import',        label: 'Import dati (Admin)', icon: DatabaseZap, roles: [ROLES.ADMIN], tabId: 'import-dati' }
         ]
       }
     ]
