@@ -109,7 +109,7 @@ export default function Login({ onLoginSuccess, setDemoMode }) {
             fontSize: '1.8rem',
             letterSpacing: '-0.02em',
             marginBottom: '6px'
-          }}>Todos Hub</h1>
+          }}>Noi Todos.it</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Accedi alla piattaforma aziendale integrata
           </p>

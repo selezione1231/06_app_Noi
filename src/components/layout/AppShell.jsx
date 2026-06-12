@@ -111,7 +111,7 @@ export default function AppShell({
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
             <img src="/todos-logo.png" alt="Todos" style={{ width: '22px', height: '22px', borderRadius: '50%' }}
               onError={(e) => { e.target.style.display = 'none' }} />
-            <strong style={{ fontSize: '0.92rem' }}>Todos Hub</strong>
+            <strong style={{ fontSize: '0.92rem' }}>Noi Todos.it</strong>
           </div>
         </div>
 

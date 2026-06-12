@@ -66,7 +66,7 @@ export default function RoleSwitcher({ selectedRoles = [], onChange, disabled = 
         }}
       >
         <ShieldCheck size={12} color="var(--primary)" />
-        <span style={{ fontSize: '0.62rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+        <span className="header-btn-text" style={{ fontSize: '0.62rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
           {isDemo ? 'Ruoli (demo):' : 'Ruoli:'}
         </span>
         <span>{label}</span>

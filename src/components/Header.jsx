@@ -69,7 +69,7 @@ export default function Header({
     }}>
       {/* Database Status Indicator (il brand è già nella sidebar) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {isDemo ? (
+        {isDemo && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -91,30 +91,6 @@ export default function Header({
               boxShadow: '0 0 6px var(--warning)'
             }} />
             <span>DEMO MODE</span>
-          </div>
-        ) : (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'var(--success-light)',
-            color: 'var(--success)',
-            padding: '4px 12px',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            border: '1px solid rgba(15, 159, 110, 0.2)'
-          }}>
-            <Database size={10} />
-            <span style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: 'var(--success)',
-              display: 'inline-block',
-              boxShadow: '0 0 6px var(--success)'
-            }} />
-            <span>SUPABASE CONNESSO</span>
           </div>
         )}
 
@@ -146,26 +122,8 @@ export default function Header({
       </div>
 
       {/* Right Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative' }} ref={dropdownRef}>
+      <div className="header-right-controls" ref={dropdownRef}>
         
-        {/* + CREA RICERCA BUTTON (Only shown for ATS/Recruiters, i.e., non-employees) */}
-        {user?.role !== 'employee' && (
-          <button
-            className="btn btn-primary"
-            onClick={onOpenJobModal}
-            style={{
-              padding: '6px 12px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              gap: '4px',
-              boxShadow: 'var(--shadow-premium)'
-            }}
-          >
-            <Plus size={14} />
-            <span>Crea Ricerca</span>
-          </button>
-        )}
-
         {/* Manual/Guide Button */}
         <button
           onClick={onOpenManual}
@@ -186,7 +144,8 @@ export default function Header({
           }}
           title="Manuale Operativo PDF"
         >
-          <span>📖 Guida PDF</span>
+          <span>📖</span>
+          <span className="header-btn-text">Guida PDF</span>
         </button>
 
         {/* Link "Mio personale" → noi.todos.it */}
@@ -211,7 +170,7 @@ export default function Header({
           }}
         >
           <Smartphone size={12} />
-          <span>Mio personale</span>
+          <span className="header-btn-text">Mio personale</span>
           <ExternalLink size={10} />
         </a>
 
@@ -246,7 +205,7 @@ export default function Header({
           }}>
             <User size={10} />
           </div>
-          <span style={{
+          <span className="header-username-text" style={{
             fontSize: '0.75rem',
             fontWeight: 600,
             color: 'var(--text-secondary)'
@@ -299,7 +258,7 @@ export default function Header({
           }}
         >
           <LogOut size={14} />
-          <span>Esci</span>
+          <span className="header-btn-text">Esci</span>
         </button>
       </div>
     </header>

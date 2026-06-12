@@ -29,7 +29,7 @@ export default function HomePage({ userRoles = [], userName, onNavigate, isDemo 
           {greeting}{userName ? `, ${userName.split(' ')[0]}` : ''} 👋
         </h1>
         <p style={{ fontSize: '0.88rem', color: 'var(--text-muted, #64748b)', margin: '4px 0 0' }}>
-          Ecco un riepilogo della tua giornata su Todos Hub.
+          Ecco un riepilogo della tua giornata su Noi Todos.it.
           {isDemo && <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#fef9c3', color: '#713f12', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>DEMO MODE</span>}
         </p>
       </div>
@@ -127,7 +127,7 @@ export default function HomePage({ userRoles = [], userName, onNavigate, isDemo 
               <Sparkles size={22} />
             </div>
             <div>
-              <div style={{ fontWeight: 800 }}>Chiedi a Todos AI</div>
+              <div style={{ fontWeight: 800 }}>Chiedi a Noi Todos.it AI</div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #64748b)' }}>
                 "Quanti operai ho oggi in Lombardia?" · "Marginalità cantiere Caravaggio?"
               </div>

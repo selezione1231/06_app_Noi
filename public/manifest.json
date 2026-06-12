@@ -1,7 +1,7 @@
 {
-  "name": "Todos Hub",
-  "short_name": "Todos Hub",
-  "description": "ATS & HRIS integrato per il gruppo Todos",
+  "name": "Noi Todos.it",
+  "short_name": "Noi Todos.it",
+  "description": "ATS & HRIS integrato per il gruppo Noi Todos.it",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

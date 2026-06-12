@@ -654,3 +654,32 @@ input, textarea, select, button {
   .todos-hub-mobile-header   { display: none !important; }
   .todos-hub-desktop-header  { display: flex !important; }
 }
+
+/* Responsive Header Styles (Noi Todos.it) */
+.header-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+@media (max-width: 1200px) {
+  .header-right-controls {
+    gap: 8px !important;
+  }
+  .header-btn-text {
+    display: none !important;
+  }
+  .header-username-text {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1080px) {
+  .header-username-text {
+    display: none !important;
+  }
+}

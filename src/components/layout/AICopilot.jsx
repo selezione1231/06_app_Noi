@@ -10,7 +10,7 @@ import { Bot, Send, Sparkles, X, RotateCcw, Loader2 } from 'lucide-react'
 const GEMINI_MODEL = 'gemini-1.5-flash'
 
 function buildSystemPrompt(context) {
-  return `Sei un assistente HR operativo per l'azienda Todos Group. Rispondi sempre in italiano, in modo conciso e professionale.
+  return `Sei un assistente HR operativo per l'azienda Noi Todos.it. Rispondi sempre in italiano, in modo conciso e professionale.
 
 Hai accesso ai seguenti dati aziendali aggiornati (estratto sintetico):
 
@@ -39,7 +39,7 @@ export default function AICopilot({ employees = [], leaves = [], expenses = [] }
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Ciao! Sono il tuo assistente AI per Todos Hub. Posso rispondere a domande sui tuoi dipendenti, ferie, spese e molto altro. Cosa vuoi sapere?'
+      content: 'Ciao! Sono il tuo assistente AI per Noi Todos.it. Posso rispondere a domande sui tuoi dipendenti, ferie, spese e molto altro. Cosa vuoi sapere?'
     }
   ])
   const [input, setInput] = useState('')

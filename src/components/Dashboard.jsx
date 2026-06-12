@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Briefcase, Eye, Trash2, Edit3, Users, Clock, CheckCircle, FileText, FolderArchive, FileCode, Play } from 'lucide-react'
+import { Search, Briefcase, Eye, Trash2, Edit3, Users, Clock, CheckCircle, FileText, FolderArchive, FileCode, Play, Plus } from 'lucide-react'
 
 export default function Dashboard({ 
   jobs, 
@@ -11,7 +11,8 @@ export default function Dashboard({
   onSaveJob,
   onDeleteTemplate,
   onStartSearchFromTemplate,
-  activeTab // 'active' | 'archived' | 'templates'
+  activeTab, // 'active' | 'archived' | 'templates'
+  onOpenJobModal
 }) {
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -283,6 +284,23 @@ export default function Dashboard({
             }}
           />
         </div>
+
+        {activeTab === 'active' && onOpenJobModal && (
+          <button
+            className="btn btn-primary"
+            onClick={onOpenJobModal}
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              gap: '4px',
+              boxShadow: 'var(--shadow-premium)'
+            }}
+          >
+            <Plus size={14} />
+            <span>Crea Ricerca</span>
+          </button>
+        )}
       </div>
 
       {/* COMPACT TABLE */}

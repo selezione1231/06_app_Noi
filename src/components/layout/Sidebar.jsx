@@ -117,7 +117,7 @@ export default function Sidebar({
                 onError={(e) => { e.target.style.display = 'none' }} />
               <div>
                 <div style={{ fontFamily: 'var(--font-display, inherit)', fontWeight: 800, fontSize: '0.92rem', lineHeight: 1.1 }}>
-                  Todos Hub
+                  Noi Todos.it
                 </div>
                 <div style={{ fontSize: '0.62rem', color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   azienda integrata

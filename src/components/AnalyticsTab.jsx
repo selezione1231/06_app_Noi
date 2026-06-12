@@ -92,7 +92,7 @@ export default function AnalyticsTab({
           📊 HR Analytics & Reportistica C-Level
         </h2>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-          Panoramica finanziaria ed organizzativa di Todos Hub per supportare le decisioni aziendali strategiche.
+          Panoramica finanziaria ed organizzativa di Noi Todos.it per supportare le decisioni aziendali strategiche.
         </p>
       </div>
 
@@ -354,7 +354,7 @@ export default function AnalyticsTab({
         <div>
           <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0 }}>🎯 Imbuto di Selezione & Recruiting Funnel (ATS)</h3>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-            Efficienza del flusso di recruiting di Todos.it. Analisi della conversione complessiva dei candidati inseriti a gestionale.
+            Efficienza del flusso di recruiting di Noi Todos.it. Analisi della conversione complessiva dei candidati inseriti a gestionale.
           </span>
         </div>
 
