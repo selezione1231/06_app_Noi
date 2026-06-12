@@ -141,9 +141,9 @@ export function StatGrid({ stats }) {
 }
 
 // --- Contenitori --------------------------------------------------------------
-export function Card({ children, style }) {
+export function Card({ children, style, ...rest }) {
   return (
-    <div style={{
+    <div {...rest} style={{
       background: 'var(--bg-card)', border: '1px solid var(--border-color)',
       borderRadius: '12px', overflow: 'hidden', ...style
     }}>{children}</div>

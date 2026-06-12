@@ -260,6 +260,8 @@ export default function WeeklyPlanner({ pmId }) {
   const [weekStart, setWeekStart] = useState(() => getMonday())
   // Persistenza condivisa: la pianificazione è unica per tutta l'azienda (realtime)
   const [assignments, setAssignments] = useSharedState('wp-weekly-assignments', WP_ASSIGNMENTS)
+  // Richieste ferie condivise: un'approvazione nell'inbox blocca subito qui
+  const [leaveRequests] = useSharedState('wp-leave-requests', WP_LEAVE_REQUESTS)
   const [pop, setPop]     = useState(null)   // { employeeId, date, assignment }
   const [copyCell, setCopyCell] = useState(null)
 
@@ -304,7 +306,7 @@ export default function WeeklyPlanner({ pmId }) {
     const fmtD = (d) => new Date(d + 'T12:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })
 
     // 1) Ferie/permessi APPROVATI che coprono la data
-    const leave = WP_LEAVE_REQUESTS.find(l =>
+    const leave = leaveRequests.find(l =>
       l.employee_id === empId && l.status === 'Approved' && date >= l.date_from && date <= l.date_to
     )
     if (leave) blocks.push(`${emp?.name} ha ${leave.type} approvate dal ${fmtD(leave.date_from)} al ${fmtD(leave.date_to)}.`)
@@ -327,7 +329,7 @@ export default function WeeklyPlanner({ pmId }) {
       warns.push(`${emp?.name} è già assegnato a ${prevSite?.code || 'altro cantiere'} il ${fmtD(date)}: verrà sostituito.`)
     }
     return { blocks, warns }
-  }, [assignments])
+  }, [assignments, leaveRequests])
 
   // true = si può procedere, false = annullato/bloccato
   const passesConflicts = useCallback((empId, date, data) => {
